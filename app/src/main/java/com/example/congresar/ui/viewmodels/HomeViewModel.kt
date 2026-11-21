@@ -1,4 +1,4 @@
-package com.example.congresar.ui
+package com.example.congresar.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
 import com.example.congresar.R
