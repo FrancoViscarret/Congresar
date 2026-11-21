@@ -1,46 +1,63 @@
 package com.example.congresar.navigation
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.annotation.StringRes
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.rounded.Groups
+import androidx.compose.material.icons.rounded.Home
+import androidx.compose.material.icons.rounded.LiveTv
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.example.congresar.R
 import com.example.congresar.ui.screens.DetalleLeyScreen
 import com.example.congresar.ui.screens.DiputadosScreen
 import com.example.congresar.ui.screens.DiputadosTVScreen
 import com.example.congresar.ui.screens.HomeScreen
 import com.example.congresar.ui.screens.PerfilDiputadoScreen
 
-private data class BottomDestination(val route: String, val label: String)
+private data class BottomDestination(
+    val route: String,
+    val icon: ImageVector,
+    @StringRes val contentDescriptionRes: Int,
+)
 
 private val bottomDestinations = listOf(
-    BottomDestination(route = "DiputadosTV", label = "DTV"),
-    BottomDestination(route = "Home", label = "Home"),
-    BottomDestination(route = "Diputados", label = "D"),
+    BottomDestination(
+        route = AppDestinations.DIPUTADOS_TV,
+        icon = Icons.Rounded.LiveTv,
+        contentDescriptionRes = R.string.nav_dtv,
+    ),
+    BottomDestination(
+        route = AppDestinations.HOME,
+        icon = Icons.Rounded.Home,
+        contentDescriptionRes = R.string.nav_home,
+    ),
+    BottomDestination(
+        route = AppDestinations.DIPUTADOS,
+        icon = Icons.Rounded.Groups,
+        contentDescriptionRes = R.string.nav_diputados,
+    ),
 )
 
 @Composable
@@ -51,46 +68,41 @@ fun AppNavigation() {
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
+        containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
             AppBottomBar(
                 currentRoute = currentRoute,
-                onNavigate = { route -> navController.navigateToBottomDestination(route) }
+                onNavigate = { route -> navController.navigateToBottomDestination(route) },
             )
-        }
+        },
     ) { paddingValues ->
         NavHost(
             navController = navController,
-            startDestination = "Home",
+            startDestination = AppDestinations.HOME,
             // Only the bottom bar space is reserved here: each screen already
             // handles the status bar through its own Scaffold.
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding())
+                .padding(bottom = paddingValues.calculateBottomPadding()),
         ) {
-
-            composable(
-                route = "Home"
-            ) {
+            composable(route = AppDestinations.HOME) {
                 HomeScreen(navController = navController)
             }
-            composable(
-                route = "Diputados"
-            ) {
+            composable(route = AppDestinations.DIPUTADOS) {
                 DiputadosScreen(navController = navController)
             }
-            composable(
-                route = "DiputadosTV"
-            ) {
+            composable(route = AppDestinations.DIPUTADOS_TV) {
                 DiputadosTVScreen(navController = navController)
             }
             composable(
-                route = "PerfilDiputado"
+                route = AppDestinations.PERFIL,
+                arguments = listOf(
+                    navArgument(AppDestinations.PERFIL_ARG) { type = NavType.IntType },
+                ),
             ) {
                 PerfilDiputadoScreen(navController = navController)
             }
-            composable(
-                route = "DetalleLey"
-            ) {
+            composable(route = AppDestinations.DETALLE_LEY) {
                 DetalleLeyScreen(navController = navController)
             }
         }
@@ -102,65 +114,36 @@ private fun AppBottomBar(
     currentRoute: String?,
     onNavigate: (String) -> Unit,
 ) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        color = MaterialTheme.colorScheme.background
-    ) {
-        Row(
-            modifier = Modifier
-                .navigationBarsPadding()
-                .fillMaxWidth()
-                .padding(vertical = 8.dp)
-                .height(48.dp)
-                .border(
-                    width = 1.dp,
-                    color = MaterialTheme.colorScheme.onBackground,
-                    shape = RectangleShape
-                )
+    Column {
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        NavigationBar(
+            containerColor = MaterialTheme.colorScheme.surface,
+            tonalElevation = 0.dp,
         ) {
-            bottomDestinations.forEachIndexed { index, destination ->
-                if (index > 0) {
-                    // Single hairline between items instead of two touching borders.
-                    Box(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .width(1.dp)
-                            .background(MaterialTheme.colorScheme.onBackground)
-                    )
+            bottomDestinations.forEach { destination ->
+                val selected = when (destination.route) {
+                    AppDestinations.DIPUTADOS ->
+                        currentRoute == AppDestinations.DIPUTADOS ||
+                            currentRoute?.startsWith(AppDestinations.PERFIL_BASE) == true
+                    else -> currentRoute == destination.route
                 }
-                BottomBarItem(
-                    label = destination.label,
-                    selected = currentRoute == destination.route,
-                    modifier = Modifier.weight(1f),
-                    onClick = { onNavigate(destination.route) }
+                NavigationBarItem(
+                    selected = selected,
+                    onClick = { onNavigate(destination.route) },
+                    icon = {
+                        Icon(
+                            imageVector = destination.icon,
+                            contentDescription = stringResource(destination.contentDescriptionRes),
+                        )
+                    },
+                    colors = NavigationBarItemDefaults.colors(
+                        selectedIconColor = MaterialTheme.colorScheme.primary,
+                        unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                    ),
                 )
             }
         }
-    }
-}
-
-@Composable
-private fun BottomBarItem(
-    label: String,
-    selected: Boolean,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit,
-) {
-    val color = if (selected) MaterialTheme.colorScheme.primary
-    else MaterialTheme.colorScheme.onBackground
-
-    Box(
-        modifier = modifier
-            .fillMaxHeight()
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = label,
-            color = color,
-            style = MaterialTheme.typography.labelLarge,
-            fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal
-        )
     }
 }
 
