@@ -53,6 +53,11 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.compose.material.icons.extended.android)
+    // Media3 ExoPlayer
+    implementation("androidx.media3:media3-exoplayer:1.11.1")
+    implementation("androidx.media3:media3-exoplayer-hls:1.11.1")
+    implementation("androidx.media3:media3-ui:1.11.1")
+
     // Hilt
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
