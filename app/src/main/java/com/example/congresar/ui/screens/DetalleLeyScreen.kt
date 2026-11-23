@@ -28,6 +28,10 @@ import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
@@ -45,6 +49,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
@@ -98,14 +103,85 @@ fun DetalleLeyScreen(
         floatingActionButton = {
             if (ley?.votacion != null && selectedTab == LeyTab.DIPUTADOS) {
                 Box {
-                    FloatingActionButton(onClick = { filterMenuExpanded = true }) {
+                    FloatingActionButton(
+                        modifier = Modifier.border(
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(
+                                width = 2.dp,
+                                brush = Brush.linearGradient(
+                                    colors =
+                                        when (votoFilter) {
+                                            VotoFiltro.TODOS -> listOf(
+                                                MaterialTheme.colorScheme.outlineVariant,
+                                                MaterialTheme.colorScheme.outline
+                                            )
+
+                                            VotoFiltro.AFIRMATIVO -> listOf(
+                                                voteGreen,
+                                                MaterialTheme.colorScheme.background
+                                            )
+
+                                            VotoFiltro.NEGATIVO -> listOf(
+                                                voteRed,
+                                                MaterialTheme.colorScheme.background
+                                            )
+
+                                            VotoFiltro.AUSENTE -> listOf(
+                                                voteYellow,
+                                                MaterialTheme.colorScheme.background
+                                            )
+                                        }
+                                )
+                            )
+                        ),
+                        onClick = { filterMenuExpanded = true },
+                        containerColor = MaterialTheme.colorScheme.surface
+
+                    ) {
                         Icon(
-                            imageVector = Icons.Rounded.FilterList,
+                            imageVector = when (votoFilter) {
+                                VotoFiltro.TODOS -> Icons.Rounded.FilterList
+                                VotoFiltro.AFIRMATIVO -> Icons.Default.Check
+                                VotoFiltro.NEGATIVO -> Icons.Default.Close
+                                VotoFiltro.AUSENTE -> Icons.Default.Remove
+                            }, tint = when (votoFilter) {
+                                VotoFiltro.TODOS -> MaterialTheme.colorScheme.onSurface
+                                VotoFiltro.AFIRMATIVO -> voteGreen
+                                VotoFiltro.NEGATIVO -> voteRed
+                                VotoFiltro.AUSENTE -> voteYellow
+                            },
                             contentDescription = "Filtrar diputados por voto"
                         )
                     }
 
                     DropdownMenu(
+                        border = BorderStroke(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                colors =
+                                    when (votoFilter) {
+                                        VotoFiltro.TODOS -> listOf(
+                                            MaterialTheme.colorScheme.outlineVariant,
+                                            MaterialTheme.colorScheme.outline
+                                        )
+
+                                        VotoFiltro.AFIRMATIVO -> listOf(
+                                            voteGreen,
+                                            MaterialTheme.colorScheme.background
+                                        )
+
+                                        VotoFiltro.NEGATIVO -> listOf(
+                                            voteRed,
+                                            MaterialTheme.colorScheme.background
+                                        )
+
+                                        VotoFiltro.AUSENTE -> listOf(
+                                            voteYellow,
+                                            MaterialTheme.colorScheme.background
+                                        )
+                                    }
+                            )
+                        ),
                         expanded = filterMenuExpanded,
                         onDismissRequest = { filterMenuExpanded = false },
                     ) {
