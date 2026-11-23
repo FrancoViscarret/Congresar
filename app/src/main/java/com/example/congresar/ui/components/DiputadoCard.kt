@@ -24,11 +24,12 @@ import com.example.congresar.domain.model.Diputado
 fun DiputadoCard(
     diputado: Diputado,
     onClick: () -> Unit,
+    roundedSize: Int = 16
 ) {
     Surface(
         onClick = onClick,
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(roundedSize),
         color = MaterialTheme.colorScheme.surface,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
     ) {

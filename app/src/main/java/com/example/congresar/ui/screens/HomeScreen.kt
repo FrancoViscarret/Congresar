@@ -429,10 +429,18 @@ fun HomeScreen(navController: NavHostController) {
                                     .getOrNull(pagerState.currentPage)
                                     ?: return@item
 
-                                LawDetailsCard(ley = ley, onDatePickerClick = {
-                                    vm.onItemLawChange(ley.id)
-                                    showDatePicker = true
-                                })
+                                LawDetailsCard(
+                                    ley = ley,
+                                    onDatePickerClick = {
+                                        vm.onItemLawChange(ley.id)
+                                        showDatePicker = true
+                                    },
+                                    onDetailsClick = {
+                                        navController.navigate(
+                                            AppDestinations.detalleLey(ley.id)
+                                        )
+                                    }
+                                )
                                 Spacer(modifier = Modifier.height(8.dp))
 
                             }

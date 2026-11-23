@@ -8,13 +8,18 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.MenuBook
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material3.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,7 +37,11 @@ import com.example.congresar.domain.model.TipoLey
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun LawDetailsCard(ley: Ley, onDatePickerClick: () -> Unit) {
+fun LawDetailsCard(
+    ley: Ley,
+    onDatePickerClick: () -> Unit,
+    onDetailsClick: () -> Unit,
+) {
 
 
     Column(
@@ -106,8 +115,9 @@ fun LawDetailsCard(ley: Ley, onDatePickerClick: () -> Unit) {
                 Icon(
                     painter = painterResource(R.drawable.calendar_icon),
                     contentDescription = "",
-                    modifier = Modifier.padding(end = 16.dp)
-                        .size(50.dp)
+                    modifier = Modifier
+                        .padding(end = 16.dp)
+                        .size(45.dp)
                         .clickable {
                             onDatePickerClick()
                         })
@@ -122,26 +132,36 @@ fun LawDetailsCard(ley: Ley, onDatePickerClick: () -> Unit) {
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
 
-                Text(
-                    text = when (ley.tipo) {
-                        TipoLey.ACTUALIZACION_DE_LEY -> when (ley.estado) {
-                            EstadoLey.APROBADA -> "Cambios introducidos: "
-                            EstadoLey.RECHAZADA -> "Cambios propuestos: "
-                            EstadoLey.EN_TRATAMIENTO -> "Cambios propuestos: "
-                        }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.EditNote,
+                        contentDescription = "", Modifier.size(32.dp)
+                    )
+                    Text(
+                        text = when (ley.tipo) {
+                            TipoLey.ACTUALIZACION_DE_LEY -> when (ley.estado) {
+                                EstadoLey.APROBADA -> "Ejes principales: "
+                                EstadoLey.RECHAZADA -> "Cambios propuestos: "
+                                EstadoLey.EN_TRATAMIENTO -> "Cambios propuestos: "
+                            }
 
-                        TipoLey.NUEVA_LEY -> when (ley.estado) {
-                            EstadoLey.APROBADA -> "Propuestas aprobadas: "
-                            EstadoLey.RECHAZADA -> "Propuestas rechazadas: "
-                            EstadoLey.EN_TRATAMIENTO -> "Propuestas: "
-                        }
-                    },
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                            TipoLey.NUEVA_LEY -> when (ley.estado) {
+                                EstadoLey.APROBADA -> "Propuestas aprobadas: "
+                                EstadoLey.RECHAZADA -> "Propuestas rechazadas: "
+                                EstadoLey.EN_TRATAMIENTO -> "Propuestas: "
+                            }
+                        },
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
                 ley.cambiosIntroducidos?.let { ci ->
 
                     ci.forEach {
@@ -158,8 +178,61 @@ fun LawDetailsCard(ley: Ley, onDatePickerClick: () -> Unit) {
                 }
             }
 
+        }
+
+        MyCard() {
+
+            Button(
+                onClick = onDetailsClick, modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp), shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Rounded.MenuBook,
+                        contentDescription = ""
+                    )
+                    Text(
+                        text = "Ver texto completo y dictamen",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                }
+            }
 
         }
+        MyCard() {
+
+            OutlinedButton(
+                onClick = {}, modifier = Modifier
+                    .fillMaxWidth()
+                    .height(70.dp), shape = RoundedCornerShape(12.dp)
+            ) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.notification_icon),
+                        contentDescription = ""
+                    )
+                    Text(
+                        text = "Seguir proyecto",
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold
+                    )
+
+                }
+            }
+
+        }
+
     }
 }
 

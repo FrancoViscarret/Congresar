@@ -8,6 +8,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,18 +16,21 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.Check
 import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -35,7 +39,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,15 +54,14 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import com.example.congresar.domain.model.Diputado
 import com.example.congresar.domain.model.EstadoLey
 import com.example.congresar.domain.model.Ley
 import com.example.congresar.navigation.AppDestinations
 import com.example.congresar.presentation.detalleley.DetalleLeyViewModel
 import com.example.congresar.ui.components.DiputadoCard
+import com.example.congresar.ui.components.MyCard
 import com.example.congresar.ui.components.RubroPill
 import java.time.format.DateTimeFormatter
-import kotlinx.coroutines.launch
 
 private val VoteGreen = Color(0xFF2ECC71)
 private val VoteRed = Color(0xFFE74C3C)
@@ -75,64 +80,222 @@ fun DetalleLeyScreen(
 
     val ley = uiState.ley
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
+    var selectedTab by remember { mutableStateOf(LeyTab.DESCRIPCION) }
+    var votoFilter by remember { mutableStateOf(VotoFiltro.TODOS) }
+    var filterMenuExpanded by remember { mutableStateOf(false) }
 
-        Column(
+    val diputados = if (ley?.votacion == null) {
+        uiState.diputados
+    } else {
+        uiState.diputados.filterIndexed { index, _ ->
+            votoFilter == VotoFiltro.TODOS ||
+                    votoPorPosicion(index, ley.estado) == votoFilter
+        }
+    }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        floatingActionButton = {
+            if (ley?.votacion != null && selectedTab == LeyTab.DIPUTADOS) {
+                Box {
+                    FloatingActionButton(onClick = { filterMenuExpanded = true }) {
+                        Icon(
+                            imageVector = Icons.Rounded.FilterList,
+                            contentDescription = "Filtrar diputados por voto"
+                        )
+                    }
+
+                    DropdownMenu(
+                        expanded = filterMenuExpanded,
+                        onDismissRequest = { filterMenuExpanded = false },
+                    ) {
+                        VotoFiltro.entries.forEach { option ->
+                            DropdownMenuItem(
+                                text = { Text(option.label) },
+                                onClick = {
+                                    votoFilter = option
+                                    filterMenuExpanded = false
+                                },
+                                leadingIcon = {
+                                    if (votoFilter == option) {
+                                        Icon(
+                                            imageVector = Icons.Rounded.Check,
+                                            contentDescription = null
+                                        )
+                                    }
+                                },
+                            )
+                        }
+                    }
+                }
+            }
+        },
+    ) { paddingValues ->
+        LazyColumn(
             modifier = Modifier
+                .fillMaxSize()
                 .padding(paddingValues)
-                .verticalScroll(rememberScrollState())
                 .padding(16.dp),
+            contentPadding = PaddingValues(
+                bottom = if (ley?.votacion != null && selectedTab == LeyTab.DIPUTADOS) {
+                    88.dp
+                } else {
+                    0.dp
+                }
+            ),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-
             if (ley == null) {
-                Text(
-                    text = if (uiState.isLoading) {
-                        "Cargando ley…"
-                    } else {
-                        "No se encontró la ley"
-                    },
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-            } else {
-                ley.rubro
-                    ?.joinToString(" / ")
-                    ?.takeIf { it.isNotBlank() }
-                    ?.let { rubro -> RubroPill(text = rubro) }
-
-                Text(
-                    text = ley.nroDeLey
-                        ?.let { numero -> "Ley N° $numero: ${ley.titulo}" }
-                        ?: ley.titulo,
-                    style = MaterialTheme.typography.headlineSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onBackground,
-                )
-
-                val expedienteLine = listOfNotNull(
-                    ley.expediente.takeIf { it.isNotBlank() }?.let { "Expediente: $it" },
-                    ley.periodo.takeIf { it.isNotBlank() },
-                ).joinToString("   •   ")
-
-                if (expedienteLine.isNotBlank()) {
+                item {
                     Text(
-                        text = expedienteLine,
+                        text = if (uiState.isLoading) {
+                            "Cargando ley…"
+                        } else {
+                            "No se encontró la ley"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MaterialTheme.colorScheme.onBackground,
+                    )
+                }
+            } else {
+                item {
+                    ley.rubro
+                        ?.joinToString(" / ")
+                        ?.takeIf { it.isNotBlank() }
+                        ?.let { rubro -> RubroPill(text = rubro) }
+                }
+
+                item {
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        Text(
+                            text = ley.nroDeLey
+                                ?.let { numero -> "Ley N° $numero: ${ley.titulo}" }
+                                ?: ley.titulo,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onBackground,
+                        )
+
+                        val expedienteLine = listOfNotNull(
+                            ley.expediente.takeIf { it.isNotBlank() }
+                                ?.let { "Expediente: $it" },
+                            ley.periodo.takeIf { it.isNotBlank() },
+                        ).joinToString("   •   ")
+
+                        if (expedienteLine.isNotBlank()) {
+                            Text(
+                                text = expedienteLine,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                }
+
+                item { VoteCard(ley = ley) }
+
+                item {
+                    LeyTabs(
+                        selectedTab = selectedTab,
+                        onTabSelected = {
+                            selectedTab = it
+                            filterMenuExpanded = false
+                        },
                     )
                 }
 
-                VoteCard(ley = ley)
+                when (selectedTab) {
+                    LeyTab.DESCRIPCION -> item {
+                        LeyTabSurface {
+                            Text(
+                                text = ley.descripcion,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                    }
 
-                LeyTabsCarousel(
-                    ley = ley,
-                    diputados = uiState.diputados,
-                    isLoadingDiputados = uiState.isLoading,
-                    onDiputadoClick = { diputado ->
-                        navController.navigate(AppDestinations.perfil(diputado.id))
-                    },
-                )
+                    LeyTab.CAMBIOS -> item {
+                        LeyTabSurface {
+                            CambiosContent(ley = ley)
+                        }
+                    }
+
+                    LeyTab.DIPUTADOS -> {
+                        item {
+                            Text(
+                                text = LeyTab.DIPUTADOS.heading,
+                                style = MaterialTheme.typography.titleMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+
+                        if (uiState.diputados.isEmpty()) {
+                            item {
+                                Text(
+                                    text = if (uiState.isLoading) {
+                                        "Cargando diputados…"
+                                    } else {
+                                        "No hay diputados para mostrar."
+                                    },
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else if (diputados.isEmpty()) {
+                            item {
+                                Text(
+                                    text = "No hay diputados con ese voto.",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        } else {
+                            items(items = diputados, key = { it.id }) { diputado ->
+
+                                MyCard() {
+                                    Column(
+                                        modifier = Modifier.background(
+                                            color = when (votoFilter) {
+                                                VotoFiltro.TODOS -> MaterialTheme.colorScheme.onBackground
+                                                VotoFiltro.AFIRMATIVO -> voteGreen.copy(alpha = 0.6f)
+                                                VotoFiltro.NEGATIVO -> voteRed.copy(alpha = 0.6f)
+                                                VotoFiltro.AUSENTE -> voteYellow.copy(alpha = 0.6f)
+                                            }
+                                        )
+                                    ) {
+                                        if (votoFilter != VotoFiltro.TODOS) {
+                                            Text(
+                                                text = when (votoFilter) {
+                                                    VotoFiltro.TODOS -> ""
+                                                    VotoFiltro.AFIRMATIVO -> "Voto afirmativo"
+                                                    VotoFiltro.NEGATIVO -> "Voto negativo"
+                                                    VotoFiltro.AUSENTE -> "Se ausentó"
+                                                },
+                                                style = MaterialTheme.typography.labelLarge,
+                                                modifier = Modifier.padding(
+                                                    vertical = 8.dp,
+                                                    horizontal = 16.dp
+                                                )
+                                            )
+                                        }
+                                        DiputadoCard(
+                                            diputado = diputado,
+                                            roundedSize = 10,
+                                            onClick = {
+                                                navController.navigate(
+                                                    AppDestinations.perfil(diputado.id)
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+
+                            }
+                        }
+                    }
+                }
             }
         }
     }
@@ -325,175 +488,136 @@ private enum class LeyTab(
 }
 
 @Composable
-private fun LeyTabsCarousel(
-    ley: Ley,
-    diputados: List<Diputado>,
-    isLoadingDiputados: Boolean,
-    onDiputadoClick: (Diputado) -> Unit,
+private fun LeyTabs(
+    selectedTab: LeyTab,
+    onTabSelected: (LeyTab) -> Unit,
 ) {
-    val pagerState = rememberPagerState(pageCount = { LeyTab.entries.size })
-    val scope = rememberCoroutineScope()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(percent = 50))
+            .background(Color(0xFF0D0D0D))
+            .border(
+                width = 1.dp,
+                color = Color.White.copy(alpha = 0.10f),
+                shape = RoundedCornerShape(percent = 50)
+            )
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        LeyTab.entries.forEach { tab ->
+            val selected = tab == selectedTab
+            val segmentColor by animateColorAsState(
+                targetValue = if (selected) Color.White else Color.Transparent,
+                label = "leyTabBackground"
+            )
+            val contentColor by animateColorAsState(
+                targetValue = if (selected) Color(0xFF0D0D0D) else Color.White,
+                label = "leyTabContent"
+            )
 
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(percent = 50))
-                .background(Color(0xFF0D0D0D))
-                .border(
-                    width = 1.dp,
-                    color = Color.White.copy(alpha = 0.10f),
-                    shape = RoundedCornerShape(percent = 50)
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .clip(RoundedCornerShape(percent = 50))
+                    .background(segmentColor)
+                    .clickable { onTabSelected(tab) }
+                    .padding(vertical = 10.dp),
+                horizontalArrangement = Arrangement.spacedBy(
+                    space = 6.dp,
+                    alignment = Alignment.CenterHorizontally
+                ),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = tab.icon,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(16.dp)
                 )
-                .padding(4.dp),
-            horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            LeyTab.entries.forEach { tab ->
-                val selected = tab.ordinal == pagerState.currentPage
-                val segmentColor by animateColorAsState(
-                    targetValue = if (selected) Color.White else Color.Transparent,
-                    label = "leyTabBackground"
+                Text(
+                    text = tab.label,
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = if (selected) FontWeight.SemiBold
+                    else FontWeight.Medium,
+                    color = contentColor,
+                    maxLines = 1
                 )
-                val contentColor by animateColorAsState(
-                    targetValue = if (selected) Color(0xFF0D0D0D) else Color.White,
-                    label = "leyTabContent"
-                )
-
-                Row(
-                    modifier = Modifier
-                        .weight(1f)
-                        .clip(RoundedCornerShape(percent = 50))
-                        .background(segmentColor)
-                        .clickable {
-                            if (tab.ordinal == pagerState.currentPage) return@clickable
-                            scope.launch { pagerState.animateScrollToPage(tab.ordinal) }
-                        }
-                        .padding(vertical = 10.dp),
-                    horizontalArrangement = Arrangement.spacedBy(
-                        space = 6.dp,
-                        alignment = Alignment.CenterHorizontally
-                    ),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = tab.icon,
-                        contentDescription = null,
-                        tint = contentColor,
-                        modifier = Modifier.size(16.dp)
-                    )
-                    Text(
-                        text = tab.label,
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = if (selected) FontWeight.SemiBold
-                        else FontWeight.Medium,
-                        color = contentColor,
-                        maxLines = 1
-                    )
-                }
-            }
-        }
-
-        HorizontalPager(
-            state = pagerState,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(400.dp),
-            verticalAlignment = Alignment.Top,
-            pageSpacing = 12.dp
-        ) { page ->
-            when (LeyTab.entries[page]) {
-                LeyTab.DESCRIPCION -> LeyTabSurface {
-                    Text(
-                        text = ley.descripcion,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                }
-
-                LeyTab.CAMBIOS -> LeyTabSurface {
-                    val cambios = ley.cambiosIntroducidos.orEmpty()
-                    if (cambios.isEmpty()) {
-                        Text(
-                            text = "No se registraron cambios propuestos.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = LeyTab.CAMBIOS.heading,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            cambios.forEach { cambio ->
-                                Row(
-                                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                    verticalAlignment = Alignment.Top
-                                ) {
-                                    Text(
-                                        text = "•",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.primary
-                                    )
-                                    Text(
-                                        text = cambio,
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                }
-                            }
-                        }
-                    }
-                }
-
-                LeyTab.DIPUTADOS -> LeyTabSurface {
-                    if (diputados.isEmpty()) {
-                        Text(
-                            text = if (isLoadingDiputados) {
-                                "Cargando diputados…"
-                            } else {
-                                "No hay diputados para mostrar."
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(
-                                text = LeyTab.DIPUTADOS.heading,
-                                style = MaterialTheme.typography.titleMedium,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            diputados.forEach { diputado ->
-                                DiputadoCard(
-                                    diputado = diputado,
-                                    onClick = { onDiputadoClick(diputado) }
-                                )
-                            }
-                        }
-                    }
-                }
             }
         }
     }
 }
 
 @Composable
+private fun CambiosContent(ley: Ley) {
+    val cambios = ley.cambiosIntroducidos.orEmpty()
+    if (cambios.isEmpty()) {
+        Text(
+            text = "No se registraron cambios propuestos.",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+    } else {
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(
+                text = LeyTab.CAMBIOS.heading,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+            cambios.forEach { cambio ->
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.Top
+                ) {
+                    Text(
+                        text = "•",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Text(
+                        text = cambio,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+        }
+    }
+}
+
+private enum class VotoFiltro(val label: String) {
+    TODOS("Todos"),
+    AFIRMATIVO("Votó a favor"),
+    NEGATIVO("Votó en contra"),
+    AUSENTE("Ausente"),
+}
+
+private fun votoPorPosicion(index: Int, estado: EstadoLey): VotoFiltro {
+    val (positivos, negativos) = when (estado) {
+        EstadoLey.APROBADA -> 5 to 4
+        EstadoLey.RECHAZADA -> 4 to 5
+        EstadoLey.EN_TRATAMIENTO -> return VotoFiltro.TODOS
+    }
+    return when {
+        index < positivos -> VotoFiltro.AFIRMATIVO
+        index < positivos + negativos -> VotoFiltro.NEGATIVO
+        else -> VotoFiltro.AUSENTE
+    }
+}
+
+@Composable
 private fun LeyTabSurface(content: @Composable () -> Unit) {
     Surface(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
         shape = RoundedCornerShape(20.dp),
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
+                .fillMaxWidth()
                 .padding(16.dp)
         ) {
             content()
