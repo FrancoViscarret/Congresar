@@ -1,6 +1,5 @@
 package com.example.congresar.ui.screens
 
-import android.content.res.Configuration
 import android.view.ViewGroup
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -21,13 +20,10 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.navigation.NavController
@@ -36,20 +32,8 @@ import androidx.navigation.NavController
 @Composable
 fun DiputadosTVScreen(
     navController: NavController,
-    onBottomBarVisibilityChange: (Boolean) -> Unit = {},
     webUrl: String = "https://dtv.hcdn.gob.ar/"
 ) {
-    val isLandscape =
-        LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    LaunchedEffect(isLandscape) {
-        onBottomBarVisibilityChange(!isLandscape)
-    }
-
-    DisposableEffect(Unit) {
-        onDispose { onBottomBarVisibilityChange(true) }
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -73,6 +57,7 @@ fun DiputadosTVScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
+            // WebView para cargar el reproductor web oficial de https://dtv.hcdn.gob.ar/
             AndroidView(
                 factory = { context ->
                     WebView(context).apply {
