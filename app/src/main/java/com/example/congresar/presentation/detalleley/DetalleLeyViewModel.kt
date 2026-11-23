@@ -29,7 +29,6 @@ class DetalleLeyViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(DetalleLeyUiState())
     val uiState: StateFlow<DetalleLeyUiState> = _uiState.asStateFlow()
 
-    // Guards against loading twice when the screen recomposes (e.g. rotation).
     private var loadedLeyId: Int? = null
     private var hasLoaded = false
 

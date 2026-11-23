@@ -1,66 +1,98 @@
 package com.example.congresar.ui.screens
 
 import android.content.res.Configuration
-import androidx.compose.foundation.layout.fillMaxWidth
+import android.view.ViewGroup
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.navigation.NavController
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.YouTubePlayer
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.listeners.AbstractYouTubePlayerListener
-import com.pierfrancescosoffritti.androidyoutubeplayer.core.player.views.YouTubePlayerView
 
-
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun DiputadosTVScreen(
     navController: NavController,
     onBottomBarVisibilityChange: (Boolean) -> Unit = {},
-    youtubeVideoId: String = "6Rx2CMf6QiU",
-    lifecycleOwner: LifecycleOwner = LocalLifecycleOwner.current
+    webUrl: String = "https://dtv.hcdn.gob.ar/"
 ) {
-
     val isLandscape =
         LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // Hide the app bottom bar while this screen is horizontal.
     LaunchedEffect(isLandscape) {
         onBottomBarVisibilityChange(!isLandscape)
     }
 
-    // Restore it when leaving the screen (or if it is disposed while hidden).
     DisposableEffect(Unit) {
         onDispose { onBottomBarVisibilityChange(true) }
     }
 
-    AndroidView(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .clip(RoundedCornerShape(5.dp)),
-        factory = { factory ->
-            YouTubePlayerView(context = factory).apply {
-                lifecycleOwner.lifecycle.addObserver(this)
-                addYouTubePlayerListener(
-                    youTubePlayerListener = object : AbstractYouTubePlayerListener() {
-                        override fun onReady(youTubePlayer: YouTubePlayer) {
-
-
-                            youTubePlayer.loadVideo(youtubeVideoId, startSeconds = 0f)
-
-                        }
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(12.dp)
+                                .clip(CircleShape)
+                                .background(Color.Red)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = "Diputados TV - En Vivo")
                     }
-                )
-            }
+                }
+            )
         }
-    )
-
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+        ) {
+            AndroidView(
+                factory = { context ->
+                    WebView(context).apply {
+                        layoutParams = ViewGroup.LayoutParams(
+                            ViewGroup.LayoutParams.MATCH_PARENT,
+                            ViewGroup.LayoutParams.MATCH_PARENT
+                        )
+                        settings.javaScriptEnabled = true
+                        settings.domStorageEnabled = true
+                        settings.loadWithOverviewMode = true
+                        settings.useWideViewPort = true
+                        webViewClient = WebViewClient()
+                    }.also { webView ->
+                        webView.loadUrl(webUrl)
+                    }
+                },
+                modifier = Modifier
+                    .fillMaxSize()
+            )
+        }
+    }
 }
+

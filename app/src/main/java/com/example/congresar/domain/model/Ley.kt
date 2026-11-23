@@ -2,12 +2,6 @@ package com.example.congresar.domain.model
 
 import java.time.LocalDate
 
-/**
- * Legislative bill. Mirrors the `Ley` entity of the data model:
- * id_ley, titulo, descripcion, estado, fecha_presentacion.
- *
- * [miniatura] is the drawable resource used as the carousel card image.
- */
 data class Ley(
     val id: Int,
     val titulo: String,
@@ -24,10 +18,6 @@ data class Ley(
     val votacion: ResultadoVotacion? = null,
 )
 
-/**
- * Vote outcome for a law. Laws still in [EstadoLey.EN_TRATAMIENTO] have a null
- * [Ley.votacion].
- */
 data class ResultadoVotacion(
     val fecha: LocalDate,
     val afirmativos: Int,

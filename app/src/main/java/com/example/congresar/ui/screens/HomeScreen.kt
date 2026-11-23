@@ -54,25 +54,39 @@ import androidx.compose.ui.zIndex
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
+import com.example.congresar.R
+import com.example.congresar.domain.model.EstadoLey
 import com.example.congresar.domain.model.Noticia
+import com.example.congresar.domain.model.TipoLey
 import com.example.congresar.navigation.AppDestinations
 import com.example.congresar.ui.components.CongresarDatePicker
+import com.example.congresar.ui.components.EstadoLeyPill
 import com.example.congresar.ui.components.LawDetailsCard
 import com.example.congresar.ui.components.NewsDetailCard
 import com.example.congresar.ui.components.NewsDetailDialog
 import com.example.congresar.ui.components.PageIndicator
+import com.example.congresar.ui.components.RubroPill
 import com.example.congresar.ui.viewmodels.HomeViewModel
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.launch
 
+val voteGreen = Color(0xFF2ECC71)
+val voteRed = Color(0xFFE74C3C)
+val voteYellow = Color(0xFFF1C40F)
+
 private enum class CarouselTab(val label: String, val icon: ImageVector?) {
     LEYES("Leyes", null),
     NOTICIAS("Noticias", Icons.Outlined.Newspaper),
 }
 
-private data class CarouselItem(val miniatura: Int, val titulo: String)
+private data class CarouselItem(
+    val miniatura: Int,
+    val titulo: String,
+    val estadoLey: EstadoLey? = null,
+    val tipoLey: TipoLey? = null
+)
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
@@ -80,7 +94,6 @@ fun HomeScreen(navController: NavHostController) {
     val vm: HomeViewModel = hiltViewModel()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     var showDatePicker by remember { mutableStateOf(false) }
-    // News opened in the readable dialog, null when the dialog is closed.
     var expandedNoticia by remember { mutableStateOf<Noticia?>(null) }
     val scope = rememberCoroutineScope()
 
@@ -94,7 +107,7 @@ fun HomeScreen(navController: NavHostController) {
 
     val items: List<CarouselItem> = when (selectedTab) {
         CarouselTab.LEYES -> uiState.leyes.map { ley ->
-            CarouselItem(ley.miniatura, ley.titulo)
+            CarouselItem(ley.miniatura, ley.titulo, estadoLey = ley.estado, tipoLey = ley.tipo)
 
         }
 
@@ -103,7 +116,6 @@ fun HomeScreen(navController: NavHostController) {
 
     val pagerState = rememberPagerState(pageCount = { items.size })
 
-    // Noticias starts on the first related card; Leyes reopens on the law being watched.
     LaunchedEffect(selectedTab, items) {
         if (items.isNotEmpty()) {
             val targetPage = when (selectedTab) {
@@ -233,7 +245,6 @@ fun HomeScreen(navController: NavHostController) {
                                     .fillMaxSize()
                                     .clickable {
                                         when (selectedTab) {
-                                            // Laws open their detail screen.
                                             CarouselTab.LEYES -> {
                                                 uiState.leyes.getOrNull(page)?.let { ley ->
                                                     navController.navigate(
@@ -242,7 +253,6 @@ fun HomeScreen(navController: NavHostController) {
                                                 }
                                             }
 
-                                            // News open the readable dialog.
                                             CarouselTab.NOTICIAS -> {
                                                 noticias.getOrNull(page)?.let {
                                                     expandedNoticia = it
@@ -255,8 +265,6 @@ fun HomeScreen(navController: NavHostController) {
                                                 pagerState.currentPageOffsetFraction
                                         val absOffset = pageOffset.absoluteValue.coerceIn(0f, 1f)
 
-                                        // Deck style: neighbours shrink and fade behind the
-                                        // current card.
                                         scaleX = 1f - 0.06f * absOffset
                                         scaleY = 1f - 0.06f * absOffset
                                         alpha = 1f - 0.30f * absOffset
@@ -273,7 +281,6 @@ fun HomeScreen(navController: NavHostController) {
                                     modifier = Modifier.fillMaxSize()
                                 )
 
-                                // Fade the bottom of the image so the title stays readable.
                                 Box(
                                     modifier = Modifier
                                         .fillMaxSize()
@@ -285,22 +292,59 @@ fun HomeScreen(navController: NavHostController) {
                                         )
                                 )
 
-                                Text(
-                                    text = items[page].titulo,
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
                                     modifier = Modifier
                                         .align(Alignment.BottomStart)
-                                        .padding(start = 16.dp, end = 16.dp, bottom = 30.dp),
-                                    style = MaterialTheme.typography.titleLarge,
-                                    fontWeight = FontWeight.Bold,
-                                    color = Color.White,
-                                    maxLines = 2,
-                                    overflow = TextOverflow.Ellipsis
-                                )
+                                        .padding(
+                                            start = 16.dp,
+                                            end = 16.dp,
+                                            bottom = 30.dp
+                                        )
+                                ) {
+                                    items[page].estadoLey?.let { estadoLey ->
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            EstadoLeyPill(
+                                                text = when (estadoLey) {
+                                                    EstadoLey.APROBADA -> "Aprobada"
+                                                    EstadoLey.RECHAZADA -> "Rechazada"
+                                                    EstadoLey.EN_TRATAMIENTO -> "En comisión"
+                                                },
+                                                backgroundColor = when (estadoLey) {
+                                                    EstadoLey.APROBADA -> voteGreen
+                                                    EstadoLey.RECHAZADA -> voteRed
+                                                    EstadoLey.EN_TRATAMIENTO -> voteYellow
+                                                },
+                                                accentColor = MaterialTheme.colorScheme.background
+                                            )
+                                            EstadoLeyPill(
+                                                text = when (items[page].tipoLey) {
+                                                    TipoLey.NUEVA_LEY -> "Ley nueva"
+                                                    TipoLey.ACTUALIZACION_DE_LEY -> "Actualización ley vigente"
+                                                    null -> ""
+                                                },
+
+                                                accentColor = MaterialTheme.colorScheme.background,
+                                                backgroundColor = Color.Blue
+                                            )
+
+                                        }
+                                        Text(
+                                            text = items[page].titulo,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+
                             }
                         }
                     }
 
-                    // Segmented pill control over the image.
                     Row(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
@@ -334,8 +378,6 @@ fun HomeScreen(navController: NavHostController) {
                                     .clickable {
                                         if (tab == selectedTab) return@clickable
 
-                                        // Entering Noticias keeps the law currently on
-                                        // screen, so its related news are the ones listed.
                                         if (tab == CarouselTab.NOTICIAS) {
                                             relatedLeyId = uiState.leyes
                                                 .getOrNull(pagerState.currentPage)
@@ -366,8 +408,6 @@ fun HomeScreen(navController: NavHostController) {
                         }
                     }
 
-                    // Dots sit 16dp above the bottom edge of the carousel/image.
-
                 }
                 PageIndicator(
                     pageCount = items.size,
@@ -384,15 +424,12 @@ fun HomeScreen(navController: NavHostController) {
 
                     item {
                         when (selectedTab) {
-                            // One card per law field.
                             CarouselTab.LEYES -> {
                                 val ley = uiState.leyes
                                     .getOrNull(pagerState.currentPage)
                                     ?: return@item
 
                                 LawDetailsCard(ley = ley, onDatePickerClick = {
-                                    // Remember which law opened the picker so it starts
-                                    // on that law's presentation date.
                                     vm.onItemLawChange(ley.id)
                                     showDatePicker = true
                                 })
@@ -400,14 +437,11 @@ fun HomeScreen(navController: NavHostController) {
 
                             }
 
-                            // News card (title, summary and related laws) plus its source data.
                             CarouselTab.NOTICIAS -> {
                                 val noticia = noticias
                                     .getOrNull(pagerState.currentPage)
                                     ?: return@item
 
-                                // Resolve the related law ids to the law titles shown
-                                // by NewsDetailCard.
                                 val leyesRelacionadas = uiState.leyes
                                     .filter { ley -> ley.id in noticia.relatedTo }
                                     .map { ley -> ley.titulo }

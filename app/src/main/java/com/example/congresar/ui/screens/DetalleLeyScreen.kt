@@ -54,6 +54,7 @@ import com.example.congresar.domain.model.Ley
 import com.example.congresar.navigation.AppDestinations
 import com.example.congresar.presentation.detalleley.DetalleLeyViewModel
 import com.example.congresar.ui.components.DiputadoCard
+import com.example.congresar.ui.components.RubroPill
 import java.time.format.DateTimeFormatter
 import kotlinx.coroutines.launch
 
@@ -313,42 +314,6 @@ private fun VoteCount(
 }
 
 
-@Composable
-fun RubroPill(
-    text: String,
-    modifier: Modifier = Modifier,
-    accentColor: Color = Color(0xFF00A2FF),    // Light cyan/blue color
-    backgroundColor: Color = Color(0xFF0A1828)  // Dark navy background
-) {
-    Surface(
-        modifier = modifier,
-        shape = CircleShape, // Fully rounded pill shape
-        color = backgroundColor,
-        border = BorderStroke(width = 1.dp, color = accentColor)
-    ) {
-        Row(
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(6.dp)
-        ) {
-            // Bullet dot
-            Box(
-                modifier = Modifier
-                    .size(7.dp)
-                    .background(color = accentColor, shape = CircleShape)
-            )
-
-            // Text
-            Text(
-                text = text.uppercase(),
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = accentColor
-            )
-        }
-    }
-}
-
 private enum class LeyTab(
     val label: String,
     val heading: String,
@@ -359,10 +324,6 @@ private enum class LeyTab(
     DIPUTADOS("Diputados", "Diputados", Icons.Rounded.Groups),
 }
 
-/**
- * Tabbed carousel below the vote card: description, proposed changes and the
- * list of deputies. Voting details per deputy will be wired later.
- */
 @Composable
 private fun LeyTabsCarousel(
     ley: Ley,

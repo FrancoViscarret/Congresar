@@ -69,7 +69,6 @@ fun AppNavigation() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
-    // Screens can request the bottom bar to hide (e.g. Diputados TV in landscape).
     var isBottomBarVisible by remember { mutableStateOf(true) }
 
     Scaffold(

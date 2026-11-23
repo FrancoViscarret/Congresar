@@ -14,9 +14,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * State rendered by [com.example.congresar.ui.screens.HomeScreen].
- */
 data class HomeUiState(
     val leyes: List<Ley> = emptyList(),
     val noticias: List<Noticia> = emptyList(),

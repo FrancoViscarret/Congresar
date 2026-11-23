@@ -7,12 +7,6 @@ import com.example.congresar.domain.model.ResultadoVotacion
 import com.example.congresar.domain.model.TipoLey
 import java.time.LocalDate
 
-/**
- * Fictional bills used until a database or network source exists.
- * Titles, descriptions and vote numbers are plausible placeholders, not real
- * legislative records. [Ley.miniatura] is kept as a local drawable for now; the
- * image will come from the network (Coil) once there is an API.
- */
 object LeySeed {
     val leyes: List<Ley> = listOf(
         Ley(
