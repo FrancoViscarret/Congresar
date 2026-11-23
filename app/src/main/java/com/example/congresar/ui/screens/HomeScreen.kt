@@ -1,61 +1,205 @@
 package com.example.congresar.ui.screens
 
-import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.foundation.BorderStroke
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Newspaper
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SelectableDates
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
-import com.example.congresar.data.Location
-import com.example.congresar.data.locations
+import com.example.congresar.R
+import com.example.congresar.domain.model.EstadoLey
+import com.example.congresar.domain.model.Noticia
+import com.example.congresar.domain.model.TipoLey
+import com.example.congresar.navigation.AppDestinations
+import com.example.congresar.ui.components.CongresarDatePicker
+import com.example.congresar.ui.components.EstadoLeyPill
+import com.example.congresar.ui.components.LawDetailsCard
+import com.example.congresar.ui.components.NewsDetailCard
+import com.example.congresar.ui.components.NewsDetailDialog
+import com.example.congresar.ui.components.PageIndicator
+import com.example.congresar.ui.components.RubroPill
+import com.example.congresar.ui.viewmodels.HomeViewModel
+import java.time.Instant
+import java.time.ZoneOffset
 import kotlin.math.absoluteValue
+import kotlinx.coroutines.launch
 
-private enum class CarouselTab(val label: String) {
-    LEYES("Leyes"),
-    NOTICIAS("Noticias"),
+val voteGreen = Color(0xFF2ECC71)
+val voteRed = Color(0xFFE74C3C)
+val voteYellow = Color(0xFFF1C40F)
+
+private enum class CarouselTab(val label: String, val icon: ImageVector?) {
+    LEYES("Leyes", null),
+    NOTICIAS("Noticias", Icons.Outlined.Newspaper),
 }
+
+private data class CarouselItem(
+    val miniatura: Int,
+    val titulo: String,
+    val estadoLey: EstadoLey? = null,
+    val tipoLey: TipoLey? = null
+)
 
 @Composable
 fun HomeScreen(navController: NavHostController) {
 
+    val vm: HomeViewModel = hiltViewModel()
+    val uiState by vm.uiState.collectAsStateWithLifecycle()
+    var showDatePicker by remember { mutableStateOf(false) }
+    var expandedNoticia by remember { mutableStateOf<Noticia?>(null) }
+    val scope = rememberCoroutineScope()
+
+    var selectedTab by remember { mutableStateOf(CarouselTab.LEYES) }
+
+    var relatedLeyId by remember { mutableStateOf<Int?>(null) }
+
+    val noticias = relatedLeyId
+        ?.let { leyId -> uiState.noticias.filter { leyId in it.relatedTo } }
+        ?: uiState.noticias
+
+    val items: List<CarouselItem> = when (selectedTab) {
+        CarouselTab.LEYES -> uiState.leyes.map { ley ->
+            CarouselItem(ley.miniatura, ley.titulo, estadoLey = ley.estado, tipoLey = ley.tipo)
+
+        }
+
+        CarouselTab.NOTICIAS -> noticias.map { CarouselItem(it.miniatura, it.titulo) }
+    }
+
+    val pagerState = rememberPagerState(pageCount = { items.size })
+
+    LaunchedEffect(selectedTab, items) {
+        if (items.isNotEmpty()) {
+            val targetPage = when (selectedTab) {
+                CarouselTab.LEYES -> uiState.leyes.indexOfFirst { it.id == relatedLeyId }
+                    .takeIf { it >= 0 } ?: 0
+
+                CarouselTab.NOTICIAS -> 0
+            }
+            pagerState.scrollToPage(targetPage.coerceIn(0, items.lastIndex))
+        }
+    }
+
+    if (showDatePicker) {
+        var initialDateSelected: Long? = null
+
+        uiState.currentLawId?.let { lawId ->
+
+            initialDateSelected = uiState.leyes
+                .firstOrNull { it.id == lawId }
+                ?.fechaPresentacion
+                ?.atStartOfDay(ZoneOffset.UTC)
+                ?.toInstant()
+                ?.toEpochMilli()
+
+        }
+        val diasSeleccionables = uiState.leyes.map { ley ->
+            ley.fechaPresentacion
+        }.toSet()
+
+        val selectableDates = object : SelectableDates {
+            override fun isSelectableDate(utcTimeMillis: Long): Boolean {
+                val date =
+                    Instant.ofEpochMilli(utcTimeMillis).atZone(ZoneOffset.UTC).toLocalDate()
+
+                return date in diasSeleccionables
+            }
+        }
+        val datePickerState =
+            rememberDatePickerState(
+                initialSelectedDateMillis = initialDateSelected,
+                yearRange = 2024..2028, selectableDates = selectableDates
+            )
+        CongresarDatePicker(
+            datePickerState = datePickerState,
+            onDismiss = { showDatePicker = false },
+            onDateSelected = { millis ->
+                showDatePicker = false
+
+                val selectedDate = millis?.let {
+                    Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate()
+                }
+                val lawIndex = selectedDate
+                    ?.let { date -> uiState.leyes.indexOfFirst { it.fechaPresentacion == date } }
+                    ?: -1
+
+                if (lawIndex >= 0) {
+                    scope.launch { pagerState.scrollToPage(lawIndex) }
+                }
+            }
+        )
+    }
+
+    expandedNoticia?.let { noticia ->
+        val leyesRelacionadasDialogo = uiState.leyes
+            .filter { ley -> ley.id in noticia.relatedTo }
+            .map { ley -> ley.titulo }
+
+        NewsDetailDialog(
+            noticia = noticia,
+            relatedLaws = leyesRelacionadasDialogo,
+            onDismiss = { expandedNoticia = null }
+        )
+    }
+
     Scaffold(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
+            .then(
+                if (showDatePicker) {
+                    Modifier.blur(10.dp)
+                } else {
+                    Modifier
+                }
+            )
     ) { paddingValues ->
 
         Surface(
@@ -65,145 +209,266 @@ fun HomeScreen(navController: NavHostController) {
             color = MaterialTheme.colorScheme.background
         ) {
 
-            var selectedTab by remember { mutableStateOf(CarouselTab.LEYES) }
-
-            // TODO: replace with the real data source per category once it exists.
-            val items: List<Location> = remember(selectedTab) {
-                when (selectedTab) {
-                    CarouselTab.LEYES -> locations
-                    CarouselTab.NOTICIAS -> locations.reversed()
-                }
-            }
-
-            val pagerState = rememberPagerState(pageCount = { items.size })
-
-            // Every tab starts again from the first card.
-            LaunchedEffect(items) {
-                if (items.isNotEmpty()) pagerState.scrollToPage(0)
-            }
-
             Column(modifier = Modifier.fillMaxSize()) {
 
                 Box(
                     modifier = Modifier
                         .fillMaxWidth()
-                        // Carousel takes 33% of the available height.
-                        .fillMaxHeight(0.33f),
+
+                        .fillMaxHeight(0.50f),
                     contentAlignment = Alignment.BottomCenter
                 ) {
 
-                    HorizontalPager(
-                        state = pagerState,
-                        modifier = Modifier.fillMaxSize(),
-                        // Full-bleed cards: no padding at all, the image uses the whole width.
-                        contentPadding = PaddingValues(0.dp)
-                    ) { page ->
+                    if (items.isEmpty()) {
                         Box(
-                            modifier = Modifier
-                                // Only the settled card needs to be on top; reading currentPage
-                                // (not the offset fraction) here avoids per-frame recomposition.
-                                .zIndex(if (page == pagerState.currentPage) 1f else 0f)
-                                .fillMaxSize()
-                                .graphicsLayer {
-                                    val pageOffset = (pagerState.currentPage - page) +
-                                        pagerState.currentPageOffsetFraction
-                                    val absOffset = pageOffset.absoluteValue.coerceIn(0f, 1f)
-
-                                    // Deck style: neighbours shrink and fade behind the current card.
-                                    scaleX = 1f - 0.06f * absOffset
-                                    scaleY = 1f - 0.06f * absOffset
-                                    alpha = 1f - 0.30f * absOffset
-
-                                    shape = RectangleShape
-                                    clip = true
-                                    shadowElevation = (1f - absOffset) * 10.dp.toPx()
-                                }
+                            modifier = Modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            Image(
-                                painter = painterResource(id = items[page].image),
-                                contentDescription = items[page].title ?: "",
-                                contentScale = ContentScale.Crop,
-                                modifier = Modifier.fillMaxSize()
+                            Text(
+                                text = if (selectedTab == CarouselTab.NOTICIAS && relatedLeyId != null) {
+                                    "Sin noticias relacionadas con esta ley"
+                                } else {
+                                    "Sin contenido por ahora"
+                                },
+                                color = MaterialTheme.colorScheme.onBackground,
+                                style = MaterialTheme.typography.bodyMedium
                             )
+                        }
+                    } else {
+                        HorizontalPager(
+                            state = pagerState,
+                            modifier = Modifier.fillMaxSize()
+                        ) { page ->
+                            Box(
+                                modifier = Modifier
+                                    .zIndex(if (page == pagerState.currentPage) 1f else 0f)
+                                    .fillMaxSize()
+                                    .clickable {
+                                        when (selectedTab) {
+                                            CarouselTab.LEYES -> {
+                                                uiState.leyes.getOrNull(page)?.let { ley ->
+                                                    navController.navigate(
+                                                        AppDestinations.detalleLey(ley.id)
+                                                    )
+                                                }
+                                            }
+
+                                            CarouselTab.NOTICIAS -> {
+                                                noticias.getOrNull(page)?.let {
+                                                    expandedNoticia = it
+                                                }
+                                            }
+                                        }
+                                    }
+                                    .graphicsLayer {
+                                        val pageOffset = (pagerState.currentPage - page) +
+                                                pagerState.currentPageOffsetFraction
+                                        val absOffset = pageOffset.absoluteValue.coerceIn(0f, 1f)
+
+                                        scaleX = 1f - 0.06f * absOffset
+                                        scaleY = 1f - 0.06f * absOffset
+                                        alpha = 1f - 0.30f * absOffset
+
+                                        shape = RectangleShape
+                                        clip = true
+                                        shadowElevation = (1f - absOffset) * 10.dp.toPx()
+                                    }
+                            ) {
+                                Image(
+                                    painter = painterResource(id = items[page].miniatura),
+                                    contentDescription = items[page].titulo,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize()
+                                )
+
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .background(
+                                            Brush.verticalGradient(
+                                                0.55f to Color.Transparent,
+                                                1f to Color.Black.copy(alpha = 0.65f)
+                                            )
+                                        )
+                                )
+
+
+                                Column(
+                                    verticalArrangement = Arrangement.spacedBy(8.dp),
+                                    modifier = Modifier
+                                        .align(Alignment.BottomStart)
+                                        .padding(
+                                            start = 16.dp,
+                                            end = 16.dp,
+                                            bottom = 30.dp
+                                        )
+                                ) {
+                                    items[page].estadoLey?.let { estadoLey ->
+                                        Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                            EstadoLeyPill(
+                                                text = when (estadoLey) {
+                                                    EstadoLey.APROBADA -> "Aprobada"
+                                                    EstadoLey.RECHAZADA -> "Rechazada"
+                                                    EstadoLey.EN_TRATAMIENTO -> "En comisión"
+                                                },
+                                                backgroundColor = when (estadoLey) {
+                                                    EstadoLey.APROBADA -> voteGreen
+                                                    EstadoLey.RECHAZADA -> voteRed
+                                                    EstadoLey.EN_TRATAMIENTO -> voteYellow
+                                                },
+                                                accentColor = MaterialTheme.colorScheme.background
+                                            )
+                                            EstadoLeyPill(
+                                                text = when (items[page].tipoLey) {
+                                                    TipoLey.NUEVA_LEY -> "Ley nueva"
+                                                    TipoLey.ACTUALIZACION_DE_LEY -> "Actualización ley vigente"
+                                                    null -> ""
+                                                },
+
+                                                accentColor = MaterialTheme.colorScheme.background,
+                                                backgroundColor = Color.Blue
+                                            )
+
+                                        }
+                                        Text(
+                                            text = items[page].titulo,
+                                            style = MaterialTheme.typography.titleLarge,
+                                            fontWeight = FontWeight.Bold,
+                                            color = Color.White,
+                                            maxLines = 2,
+                                            overflow = TextOverflow.Ellipsis
+                                        )
+                                    }
+                                }
+
+                            }
                         }
                     }
 
-                    // Tabs over the image: 16dp apart and 16dp from the top edge.
                     Row(
                         modifier = Modifier
                             .align(Alignment.TopCenter)
-                            .padding(top = 16.dp),
-                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            .padding(top = 16.dp)
+                            .clip(RoundedCornerShape(percent = 50))
+                            .background(Color(0xFF0D0D0D))
+                            .border(
+                                width = 1.dp,
+                                color = Color.White.copy(alpha = 0.10f),
+                                shape = RoundedCornerShape(percent = 50)
+                            )
+                            .padding(4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(4.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         CarouselTab.entries.forEach { tab ->
                             val selected = tab == selectedTab
-                            OutlinedButton(
-                                onClick = { selectedTab = tab },
-                                shape = RoundedCornerShape(6.dp),
-                                border = BorderStroke(
-                                    width = 1.dp,
-                                    color = if (selected) MaterialTheme.colorScheme.primary
-                                    else Color.White.copy(alpha = 0.7f)
-                                ),
-                                contentPadding = PaddingValues(
-                                    horizontal = 20.dp,
-                                    vertical = 8.dp
-                                )
+                            val segmentColor by animateColorAsState(
+                                targetValue = if (selected) Color.White else Color.Transparent,
+                                label = "tabBackground"
+                            )
+                            val contentColor by animateColorAsState(
+                                targetValue = if (selected) Color(0xFF0D0D0D) else Color.White,
+                                label = "tabContent"
+                            )
+
+                            Row(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(percent = 50))
+                                    .background(segmentColor)
+                                    .clickable {
+                                        if (tab == selectedTab) return@clickable
+
+                                        if (tab == CarouselTab.NOTICIAS) {
+                                            relatedLeyId = uiState.leyes
+                                                .getOrNull(pagerState.currentPage)
+                                                ?.id
+                                        }
+                                        selectedTab = tab
+                                    }
+                                    .padding(horizontal = 24.dp, vertical = 10.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
+                                tab.icon?.let { icon ->
+                                    Icon(
+                                        imageVector = icon,
+                                        contentDescription = null,
+                                        tint = contentColor,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                                 Text(
                                     text = tab.label,
+                                    style = MaterialTheme.typography.bodyMedium,
                                     fontWeight = if (selected) FontWeight.SemiBold
-                                    else FontWeight.Normal,
-                                    color = if (selected) MaterialTheme.colorScheme.primary
-                                    else Color.White
+                                    else FontWeight.Medium,
+                                    color = contentColor
                                 )
                             }
                         }
                     }
 
-                    // Dots sit 16dp above the bottom edge of the carousel/image.
-                    PageIndicator(
-                        pageCount = items.size,
-                        pagerState = pagerState,
-                        modifier = Modifier.padding(bottom = 16.dp)
-                    )
                 }
+                PageIndicator(
+                    pageCount = items.size,
+                    pagerState = pagerState,
+                    modifier = Modifier.padding(16.dp)
+                )
 
-                // TODO: pending sections from the mockup
-                // (Aprobado/Rechazado, 3 Puntos Clave, Cambios con Ley Anterior).
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(horizontal = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+
+                    item {
+                        when (selectedTab) {
+                            CarouselTab.LEYES -> {
+                                val ley = uiState.leyes
+                                    .getOrNull(pagerState.currentPage)
+                                    ?: return@item
+
+                                LawDetailsCard(
+                                    ley = ley,
+                                    onDatePickerClick = {
+                                        vm.onItemLawChange(ley.id)
+                                        showDatePicker = true
+                                    },
+                                    onDetailsClick = {
+                                        navController.navigate(
+                                            AppDestinations.detalleLey(ley.id)
+                                        )
+                                    }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+                            }
+
+                            CarouselTab.NOTICIAS -> {
+                                val noticia = noticias
+                                    .getOrNull(pagerState.currentPage)
+                                    ?: return@item
+
+                                val leyesRelacionadas = uiState.leyes
+                                    .filter { ley -> ley.id in noticia.relatedTo }
+                                    .map { ley -> ley.titulo }
+
+                                NewsDetailCard(
+                                    noticia = noticia,
+                                    relatedLaws = leyesRelacionadas,
+                                    onClick = { expandedNoticia = noticia }
+                                )
+                                Spacer(modifier = Modifier.height(8.dp))
+
+
+                            }
+                        }
+                    }
+
+                }
             }
         }
-    }
-}
 
-@Composable
-private fun PageIndicator(
-    pageCount: Int,
-    pagerState: PagerState,
-    modifier: Modifier = Modifier,
-) {
-    Row(
-        modifier = modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.Center,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        repeat(pageCount) { index ->
-            val selected = pagerState.currentPage == index
-            val dotSize by animateDpAsState(
-                targetValue = if (selected) 9.dp else 7.dp,
-                label = "dotSize"
-            )
-            Box(
-                modifier = Modifier
-                    .padding(horizontal = 4.dp)
-                    .size(dotSize)
-                    .clip(CircleShape)
-                    .background(
-                        if (selected) Color.White
-                        else Color.White.copy(alpha = 0.45f)
-                    )
-            )
-        }
     }
 }
