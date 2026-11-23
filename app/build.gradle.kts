@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.example.congresar"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 37
         versionCode = 1
         versionName = "1.0"
@@ -32,6 +32,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
+        // java.time (LocalDate) backport for minSdk 24.
+        isCoreLibraryDesugaringEnabled = true
     }
     buildFeatures {
         compose = true
@@ -39,6 +41,7 @@ android {
 }
 
 dependencies {
+    coreLibraryDesugaring(libs.desugar.jdk.libs)
     implementation(libs.androidx.activity.compose)
     implementation(libs.androidx.compose.material3)
     implementation(libs.androidx.compose.ui)

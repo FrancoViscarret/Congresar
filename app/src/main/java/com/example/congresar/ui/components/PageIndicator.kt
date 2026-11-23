@@ -6,10 +6,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -32,17 +35,18 @@ fun PageIndicator(
         repeat(pageCount) { index ->
             val selected = pagerState.currentPage == index
             val dotSize by animateDpAsState(
-                targetValue = if (selected) 9.dp else 7.dp,
+                targetValue = if (selected) 28.dp else 7.dp,
                 label = "dotSize"
             )
             Box(
                 modifier = Modifier
                     .padding(horizontal = 4.dp)
-                    .size(dotSize)
+                    .height(7.dp)
+                    .width(width = dotSize)
                     .clip(CircleShape)
                     .background(
-                        if (selected) Color.White
-                        else Color.White.copy(alpha = 0.45f)
+                        if (selected) MaterialTheme.colorScheme.onSurface
+                        else MaterialTheme.colorScheme.onSurfaceVariant
                     )
             )
         }

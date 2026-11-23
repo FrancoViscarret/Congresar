@@ -1,12 +1,17 @@
 package com.example.congresar.ui.viewmodels
 
 import androidx.lifecycle.ViewModel
-import com.example.congresar.R
-import com.example.congresar.data.Ley
+import androidx.lifecycle.viewModelScope
+import com.example.congresar.domain.model.Ley
+import com.example.congresar.domain.model.Noticia
+import com.example.congresar.domain.usecase.GetLeyesUseCase
+import com.example.congresar.domain.usecase.GetNoticiasUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
@@ -14,48 +19,50 @@ import javax.inject.Inject
  */
 data class HomeUiState(
     val leyes: List<Ley> = emptyList(),
-    val isLoading: Boolean = false,
+    val noticias: List<Noticia> = emptyList(),
+    val isLoading: Boolean = true,
+    val currentLawId: Int? = null
 )
 
 @HiltViewModel
-class HomeViewModel @Inject constructor() : ViewModel() {
+class HomeViewModel @Inject constructor(
+    private val getLeyes: GetLeyesUseCase,
+    private val getNoticias: GetNoticiasUseCase,
+) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
     init {
         loadLeyes()
+        loadNoticias()
     }
 
-    // TODO: replace with the repository backed by Room / the API.
+    fun onItemLawChange(lawId: Int) {
+
+        _uiState.update { currentState ->
+            currentState.copy(currentLawId = lawId)
+        }
+
+    }
+
     private fun loadLeyes() {
-        _uiState.value = HomeUiState(
-            leyes = listOf(
-                Ley(
-                    id = 1,
-                    titulo = "Presupuesto 2027",
-                    descripcion = "Asignación de partidas para el ejercicio financiero 2027.",
-                    estado = "En tratamiento",
-                    fechaPresentacion = "2026-11-01",
-                    miniatura = R.drawable.miniatura_ley,
-                ),
-                Ley(
-                    id = 2,
-                    titulo = "Reforma del Poder Judicial",
-                    descripcion = "Cambios en la integración y competencias de los tribunales.",
-                    estado = "Aprobada",
-                    fechaPresentacion = "2026-10-14",
-                    miniatura = R.drawable.miniatura_ley,
-                ),
-                Ley(
-                    id = 3,
-                    titulo = "Ley de Educación Digital",
-                    descripcion = "Incorporación de herramientas digitales en la currícula escolar.",
-                    estado = "Rechazada",
-                    fechaPresentacion = "2026-09-30",
-                    miniatura = R.drawable.miniatura_ley,
-                ),
-            )
-        )
+        viewModelScope.launch {
+            getLeyes().collect { leyes ->
+                _uiState.update {
+                    it.copy(leyes = leyes, isLoading = false)
+                }
+            }
+        }
+    }
+
+    private fun loadNoticias() {
+        viewModelScope.launch {
+            getNoticias().collect { noticias ->
+                _uiState.update {
+                    it.copy(noticias = noticias, isLoading = false)
+                }
+            }
+        }
     }
 }

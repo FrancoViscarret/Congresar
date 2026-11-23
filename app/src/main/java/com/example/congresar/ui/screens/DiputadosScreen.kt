@@ -62,6 +62,7 @@ import com.example.congresar.domain.model.Diputado
 import com.example.congresar.navigation.AppDestinations
 import com.example.congresar.presentation.diputados.DiputadosUiState
 import com.example.congresar.presentation.diputados.DiputadosViewModel
+import com.example.congresar.ui.components.DiputadoCard
 import com.example.congresar.ui.components.HemicicloBancas
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -265,67 +266,6 @@ private fun SearchField(
     )
 }
 
-@Composable
-private fun DiputadoCard(
-    diputado: Diputado,
-    onClick: () -> Unit,
-) {
-    Surface(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        color = MaterialTheme.colorScheme.surface,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-    ) {
-        Row(
-            modifier = Modifier.padding(12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(14.dp),
-        ) {
-            DiputadoAvatar(diputado = diputado)
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = diputado.nombreCompleto,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Spacer(modifier = Modifier.height(4.dp))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Text(
-                        text = diputado.bloquePolitico,
-                        modifier = Modifier.weight(1f),
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        text = diputado.provincia,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                Spacer(modifier = Modifier.height(2.dp))
-                Text(
-                    text = diputado.profesion,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-        }
-    }
-}
 
 @Composable
 private fun DiputadoAvatar(diputado: Diputado) {

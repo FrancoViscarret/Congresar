@@ -17,6 +17,9 @@ import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -66,21 +69,24 @@ fun AppNavigation() {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
 
+    // Screens can request the bottom bar to hide (e.g. Diputados TV in landscape).
+    var isBottomBarVisible by remember { mutableStateOf(true) }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            AppBottomBar(
-                currentRoute = currentRoute,
-                onNavigate = { route -> navController.navigateToBottomDestination(route) },
-            )
+            if (isBottomBarVisible) {
+                AppBottomBar(
+                    currentRoute = currentRoute,
+                    onNavigate = { route -> navController.navigateToBottomDestination(route) },
+                )
+            }
         },
     ) { paddingValues ->
         NavHost(
             navController = navController,
             startDestination = AppDestinations.HOME,
-            // Only the bottom bar space is reserved here: each screen already
-            // handles the status bar through its own Scaffold.
             modifier = Modifier
                 .fillMaxSize()
                 .padding(bottom = paddingValues.calculateBottomPadding()),
@@ -92,7 +98,10 @@ fun AppNavigation() {
                 DiputadosScreen(navController = navController)
             }
             composable(route = AppDestinations.DIPUTADOS_TV) {
-                DiputadosTVScreen(navController = navController)
+                DiputadosTVScreen(
+                    navController = navController,
+                    onBottomBarVisibilityChange = { visible -> isBottomBarVisible = visible },
+                )
             }
             composable(
                 route = AppDestinations.PERFIL,
@@ -102,8 +111,16 @@ fun AppNavigation() {
             ) {
                 PerfilDiputadoScreen(navController = navController)
             }
-            composable(route = AppDestinations.DETALLE_LEY) {
-                DetalleLeyScreen(navController = navController)
+            composable(
+                route = AppDestinations.DETALLE_LEY,
+                arguments = listOf(
+                    navArgument(AppDestinations.LEY_ARG) { type = NavType.IntType },
+                ),
+            ) { backStackEntry ->
+                DetalleLeyScreen(
+                    navController = navController,
+                    leyId = backStackEntry.arguments?.getInt(AppDestinations.LEY_ARG),
+                )
             }
         }
     }
@@ -124,7 +141,8 @@ private fun AppBottomBar(
                 val selected = when (destination.route) {
                     AppDestinations.DIPUTADOS ->
                         currentRoute == AppDestinations.DIPUTADOS ||
-                            currentRoute?.startsWith(AppDestinations.PERFIL_BASE) == true
+                                currentRoute?.startsWith(AppDestinations.PERFIL_BASE) == true
+
                     else -> currentRoute == destination.route
                 }
                 NavigationBarItem(
