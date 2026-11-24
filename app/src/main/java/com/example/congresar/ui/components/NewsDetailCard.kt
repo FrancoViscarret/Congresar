@@ -34,6 +34,8 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import com.example.congresar.domain.model.Noticia
+import com.example.congresar.ui.theme.BrandBorder
+import com.example.congresar.ui.theme.BrandTint
 import java.time.format.DateTimeFormatter
 
 private val VoteDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -61,7 +63,7 @@ fun NewsDetailCard(
             Column(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .background(color = MaterialTheme.colorScheme.onBackground)
+                    .background(color = MaterialTheme.colorScheme.primary)
             ) {
 
                 Row(modifier = Modifier.padding(16.dp)) {
@@ -69,7 +71,7 @@ fun NewsDetailCard(
                         text = noticia.fuente,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.surface,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -100,7 +102,9 @@ fun NewsDetailCard(
                         Card(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(8.dp)
+                                .padding(8.dp),
+                            colors = CardDefaults.cardColors(containerColor = BrandTint),
+                            border = BorderStroke(1.dp, BrandBorder),
                         ) {
                             Box(contentAlignment = Alignment.CenterStart) {
                                 Text(
@@ -135,7 +139,7 @@ fun NewsDetailCard(
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = MaterialTheme.colorScheme.primary,
                         )
                         relatedLaws.forEach { titulo ->
                             Text(
@@ -165,7 +169,12 @@ fun CongresarAnnotatedString(titulo: String, contenido: String) {
     Text(
         text = buildAnnotatedString {
 
-            withStyle(SpanStyle(fontWeight = FontWeight.Bold)) { append(titulo) }
+            withStyle(
+                SpanStyle(
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.primary,
+                ),
+            ) { append(titulo) }
             append(contenido)
         },
         modifier = Modifier.padding(8.dp),
@@ -186,7 +195,7 @@ fun NoticiaCard(content: @Composable () -> Unit) {
         shape = RoundedCornerShape(16.dp),
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
+            color = BrandBorder,
         )
     ) {
         content()

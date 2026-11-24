@@ -25,7 +25,7 @@ fun HemicicloBancas(
     contentDescription: String,
     modifier: Modifier = Modifier,
 ) {
-    val arcColor = MaterialTheme.colorScheme.outline
+    val arcColor = MaterialTheme.colorScheme.secondary
     val tonos = bloques.distinct()
 
     Canvas(

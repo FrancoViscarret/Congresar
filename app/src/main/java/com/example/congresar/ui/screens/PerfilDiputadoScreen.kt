@@ -59,6 +59,14 @@ import com.example.congresar.domain.model.DiputadoPerfil
 import com.example.congresar.domain.model.SentidoVoto
 import com.example.congresar.domain.model.VotacionDiputado
 import com.example.congresar.presentation.perfil.PerfilDiputadoViewModel
+import com.example.congresar.ui.theme.VoteAbsent
+import com.example.congresar.ui.theme.VoteAbsentContainer
+import com.example.congresar.ui.theme.VoteAbstention
+import com.example.congresar.ui.theme.VoteAbstentionContainer
+import com.example.congresar.ui.theme.VoteAffirmative
+import com.example.congresar.ui.theme.VoteAffirmativeContainer
+import com.example.congresar.ui.theme.VoteNegative
+import com.example.congresar.ui.theme.VoteNegativeContainer
 
 private const val VOTACIONES_INICIALES = 2
 
@@ -149,10 +157,11 @@ private fun PerfilContent(
     val diputado = perfil.diputado
     val nombreVisible = "${diputado.nombre} ${diputado.apellido}"
     var votacionesExpandidas by rememberSaveable { mutableStateOf(false) }
+    val votacionesOrdenadas = perfil.votaciones.sortedByDescending { fechaClave(it.fecha) }
     val votacionesVisibles = if (votacionesExpandidas) {
-        perfil.votaciones
+        votacionesOrdenadas
     } else {
-        perfil.votaciones.take(VOTACIONES_INICIALES)
+        votacionesOrdenadas.take(VOTACIONES_INICIALES)
     }
 
     Column(
@@ -264,7 +273,7 @@ private fun Badge(text: String) {
         text = stringResource(R.string.perfil_badge, text),
         modifier = Modifier.padding(horizontal = 6.dp),
         style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        color = MaterialTheme.colorScheme.secondary,
         textAlign = TextAlign.Center,
     )
 }
@@ -291,7 +300,7 @@ private fun SectionTitle(text: String) {
 private fun AsistenciaRing(porcentaje: Int) {
     val progreso = porcentaje.coerceIn(0, 100) / 100f
     val pista = MaterialTheme.colorScheme.outlineVariant
-    val avance = MaterialTheme.colorScheme.primary
+    val avance = MaterialTheme.colorScheme.secondary
     val descripcion = stringResource(R.string.perfil_attendance_description, porcentaje)
 
     Box(
@@ -369,43 +378,40 @@ private fun VotacionCard(votacion: VotacionDiputado) {
 
 @Composable
 private fun VotoPill(sentido: SentidoVoto) {
-    val scheme = MaterialTheme.colorScheme
     val container = when (sentido) {
-        SentidoVoto.AFIRMATIVO -> scheme.primaryContainer
-        SentidoVoto.NEGATIVO -> scheme.surface
-        SentidoVoto.ABSTENCION -> scheme.surfaceVariant
-        SentidoVoto.AUSENTE -> scheme.surface
+        SentidoVoto.AFIRMATIVO -> VoteAffirmativeContainer
+        SentidoVoto.NEGATIVO -> VoteNegativeContainer
+        SentidoVoto.ABSTENCION -> VoteAbstentionContainer
+        SentidoVoto.AUSENTE -> VoteAbsentContainer
     }
     val content = when (sentido) {
-        SentidoVoto.AFIRMATIVO -> scheme.onPrimaryContainer
-        SentidoVoto.NEGATIVO -> scheme.onSurface
-        SentidoVoto.ABSTENCION -> scheme.onSurfaceVariant
-        SentidoVoto.AUSENTE -> scheme.onSurfaceVariant
-    }
-    val border = when (sentido) {
-        SentidoVoto.NEGATIVO -> BorderStroke(1.dp, scheme.outline)
-        SentidoVoto.AUSENTE -> BorderStroke(1.dp, scheme.outlineVariant)
-        else -> null
-    }
-    val weight = when (sentido) {
-        SentidoVoto.AFIRMATIVO -> FontWeight.SemiBold
-        SentidoVoto.NEGATIVO -> FontWeight.Medium
-        else -> FontWeight.Normal
+        SentidoVoto.AFIRMATIVO -> VoteAffirmative
+        SentidoVoto.NEGATIVO -> VoteNegative
+        SentidoVoto.ABSTENCION -> VoteAbstention
+        SentidoVoto.AUSENTE -> VoteAbsent
     }
 
     Surface(
         shape = RoundedCornerShape(50),
         color = container,
-        border = border,
     ) {
         Text(
             text = sentido.etiqueta(),
             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
             style = MaterialTheme.typography.labelMedium,
-            fontWeight = weight,
+            fontWeight = FontWeight.SemiBold,
             color = content,
         )
     }
+}
+
+private fun fechaClave(fecha: String): Int {
+    val partes = fecha.split("/")
+    if (partes.size != 3) return 0
+    val dia = partes[0].toIntOrNull() ?: return 0
+    val mes = partes[1].toIntOrNull() ?: return 0
+    val anio = partes[2].toIntOrNull() ?: return 0
+    return anio * 10_000 + mes * 100 + dia
 }
 
 @Composable

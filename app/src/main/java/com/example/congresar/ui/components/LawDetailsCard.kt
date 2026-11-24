@@ -36,6 +36,8 @@ import com.example.congresar.R
 import com.example.congresar.domain.model.EstadoLey
 import com.example.congresar.domain.model.Ley
 import com.example.congresar.domain.model.TipoLey
+import com.example.congresar.ui.theme.BrandBorder
+import com.example.congresar.ui.theme.BrandTint
 import java.time.format.DateTimeFormatter
 
 @Composable
@@ -65,12 +67,16 @@ fun LawDetailsCard(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    Icon(painter = painterResource(R.drawable.book_icon), contentDescription = "")
+                    Icon(
+                        painter = painterResource(R.drawable.book_icon),
+                        contentDescription = "",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
                     Text(
                         text = "Resumen del proyecto",
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 3,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -100,7 +106,8 @@ fun LawDetailsCard(
                     modifier = Modifier.padding(16.dp),
                     text = "Presentación: ",
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.SemiBold
+                    fontWeight = FontWeight.SemiBold,
+                    color = MaterialTheme.colorScheme.primary,
                 )
 
 
@@ -118,6 +125,7 @@ fun LawDetailsCard(
                 Icon(
                     painter = painterResource(R.drawable.calendar_icon),
                     contentDescription = "",
+                    tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .padding(end = 16.dp)
                         .size(45.dp)
@@ -142,7 +150,9 @@ fun LawDetailsCard(
                 ) {
                     Icon(
                         imageVector = Icons.Rounded.EditNote,
-                        contentDescription = "", Modifier.size(32.dp)
+                        contentDescription = "",
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                     Text(
                         text = when (ley.tipo) {
@@ -160,7 +170,7 @@ fun LawDetailsCard(
                         },
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = MaterialTheme.colorScheme.primary,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -246,11 +256,11 @@ fun LawDetailsCard(
 fun MyCard(modifier: Modifier = Modifier.fillMaxWidth(), content: @Composable () -> Unit) {
     Surface(
         modifier = modifier,
-        color = MaterialTheme.colorScheme.surface,
+        color = BrandTint,
         shape = RoundedCornerShape(10.dp),
         border = BorderStroke(
             width = 1.dp,
-            color = MaterialTheme.colorScheme.outlineVariant
+            color = BrandBorder,
         )
     ) {
 

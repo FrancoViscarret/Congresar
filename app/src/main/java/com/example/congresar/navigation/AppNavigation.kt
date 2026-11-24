@@ -15,6 +15,7 @@ import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.NavigationBarItemDefaults
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.congresar.R
 import com.example.congresar.ui.screens.DetalleLeyScreen
+import com.example.congresar.ui.theme.NavIndicator
 import com.example.congresar.ui.screens.DiputadosScreen
 import com.example.congresar.ui.screens.DiputadosTVScreen
 import com.example.congresar.ui.screens.HomeScreen
@@ -131,9 +133,12 @@ private fun AppBottomBar(
     onNavigate: (String) -> Unit,
 ) {
     Column {
-        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+        HorizontalDivider(
+            thickness = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+        )
         NavigationBar(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = MaterialTheme.colorScheme.background,
             tonalElevation = 0.dp,
         ) {
             bottomDestinations.forEach { destination ->
@@ -150,13 +155,19 @@ private fun AppBottomBar(
                     icon = {
                         Icon(
                             imageVector = destination.icon,
-                            contentDescription = stringResource(destination.contentDescriptionRes),
+                            contentDescription = null,
                         )
                     },
+                    label = {
+                        Text(text = stringResource(destination.contentDescriptionRes))
+                    },
+                    alwaysShowLabel = true,
                     colors = NavigationBarItemDefaults.colors(
                         selectedIconColor = MaterialTheme.colorScheme.primary,
+                        selectedTextColor = MaterialTheme.colorScheme.primary,
                         unselectedIconColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                        indicatorColor = MaterialTheme.colorScheme.primaryContainer,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        indicatorColor = NavIndicator,
                     ),
                 )
             }

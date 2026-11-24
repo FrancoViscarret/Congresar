@@ -71,11 +71,16 @@ import com.example.congresar.presentation.detalleley.DetalleLeyViewModel
 import com.example.congresar.ui.components.DiputadoCard
 import com.example.congresar.ui.components.MyCard
 import com.example.congresar.ui.components.RubroPill
+import com.example.congresar.ui.theme.VoteAbsent
+import com.example.congresar.ui.theme.VoteAbsentContainer
+import com.example.congresar.ui.theme.VoteAbstention
+import com.example.congresar.ui.theme.VoteAbstentionContainer
+import com.example.congresar.ui.theme.VoteAffirmative
+import com.example.congresar.ui.theme.VoteAffirmativeContainer
+import com.example.congresar.ui.theme.VoteNegative
+import com.example.congresar.ui.theme.VoteNegativeContainer
 import java.time.format.DateTimeFormatter
 
-private val VoteGreen = Color(0xFF2ECC71)
-private val VoteRed = Color(0xFFE74C3C)
-private val VoteYellow = Color(0xFFF1C40F)
 private val VoteDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
 
 @Composable
@@ -134,17 +139,17 @@ fun DetalleLeyScreen(
                                             )
 
                                             VotoFiltro.AFIRMATIVO -> listOf(
-                                                voteGreen,
+                                                VoteAffirmative,
                                                 MaterialTheme.colorScheme.background
                                             )
 
                                             VotoFiltro.NEGATIVO -> listOf(
-                                                voteRed,
+                                                VoteNegative,
                                                 MaterialTheme.colorScheme.background
                                             )
 
                                             VotoFiltro.AUSENTE -> listOf(
-                                                voteYellow,
+                                                VoteAbsent,
                                                 MaterialTheme.colorScheme.background
                                             )
                                         }
@@ -163,9 +168,9 @@ fun DetalleLeyScreen(
                                 VotoFiltro.AUSENTE -> Icons.Default.Remove
                             }, tint = when (votoFilter) {
                                 VotoFiltro.TODOS -> MaterialTheme.colorScheme.onSurface
-                                VotoFiltro.AFIRMATIVO -> voteGreen
-                                VotoFiltro.NEGATIVO -> voteRed
-                                VotoFiltro.AUSENTE -> voteYellow
+                                VotoFiltro.AFIRMATIVO -> VoteAffirmative
+                                VotoFiltro.NEGATIVO -> VoteNegative
+                                VotoFiltro.AUSENTE -> VoteAbsent
                             },
                             contentDescription = "Filtrar diputados por voto"
                         )
@@ -183,17 +188,17 @@ fun DetalleLeyScreen(
                                         )
 
                                         VotoFiltro.AFIRMATIVO -> listOf(
-                                            voteGreen,
+                                            VoteAffirmative,
                                             MaterialTheme.colorScheme.background
                                         )
 
                                         VotoFiltro.NEGATIVO -> listOf(
-                                            voteRed,
+                                            VoteNegative,
                                             MaterialTheme.colorScheme.background
                                         )
 
                                         VotoFiltro.AUSENTE -> listOf(
-                                            voteYellow,
+                                            VoteAbsent,
                                             MaterialTheme.colorScheme.background
                                         )
                                     }
@@ -352,12 +357,9 @@ fun DetalleLeyScreen(
                                         modifier = Modifier.background(
                                             color = when (votoFilter) {
                                                 VotoFiltro.TODOS -> MaterialTheme.colorScheme.onBackground
-                                                VotoFiltro.AFIRMATIVO -> voteGreen.copy(
-                                                    alpha = 0.6f
-                                                )
-
-                                                VotoFiltro.NEGATIVO -> voteRed.copy(alpha = 0.6f)
-                                                VotoFiltro.AUSENTE -> voteYellow.copy(alpha = 0.6f)
+                                                VotoFiltro.AFIRMATIVO -> VoteAffirmativeContainer
+                                                VotoFiltro.NEGATIVO -> VoteNegativeContainer
+                                                VotoFiltro.AUSENTE -> VoteAbsentContainer
                                             }
                                         )
                                     ) {
@@ -449,9 +451,9 @@ private fun VoteCard(ley: Ley) {
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
                 ) {
-                    VoteCount(VoteGreen, votacion.afirmativos, "Afirmativos")
-                    VoteCount(VoteRed, votacion.negativos, "Negativos")
-                    VoteCount(VoteYellow, votacion.abstenciones, "Abst.")
+                    VoteCount(VoteAffirmative, votacion.afirmativos, "Afirmativos")
+                    VoteCount(VoteNegative, votacion.negativos, "Negativos")
+                    VoteCount(VoteAbstention, votacion.abstenciones, "Abst.")
                 }
             }
         }
@@ -461,14 +463,19 @@ private fun VoteCard(ley: Ley) {
 @Composable
 private fun EstadoPill(estado: EstadoLey) {
     val accent = when (estado) {
-        EstadoLey.APROBADA -> VoteGreen
-        EstadoLey.RECHAZADA -> VoteRed
-        EstadoLey.EN_TRATAMIENTO -> VoteYellow
+        EstadoLey.APROBADA -> VoteAffirmative
+        EstadoLey.RECHAZADA -> VoteNegative
+        EstadoLey.EN_TRATAMIENTO -> VoteAbstention
+    }
+    val container = when (estado) {
+        EstadoLey.APROBADA -> VoteAffirmativeContainer
+        EstadoLey.RECHAZADA -> VoteNegativeContainer
+        EstadoLey.EN_TRATAMIENTO -> VoteAbstentionContainer
     }
 
     Surface(
         shape = RoundedCornerShape(percent = 50),
-        color = accent.copy(alpha = 0.12f),
+        color = container,
         border = BorderStroke(1.dp, accent),
     ) {
         Row(
@@ -526,7 +533,7 @@ private fun VoteBar(
                 modifier = Modifier
                     .weight(afirmativos.toFloat())
                     .fillMaxHeight()
-                    .background(VoteGreen)
+                    .background(VoteAffirmative)
             )
         }
         if (negativos > 0) {
@@ -534,7 +541,7 @@ private fun VoteBar(
                 modifier = Modifier
                     .weight(negativos.toFloat())
                     .fillMaxHeight()
-                    .background(VoteRed)
+                    .background(VoteNegative)
             )
         }
         if (abstenciones > 0) {
@@ -542,7 +549,7 @@ private fun VoteBar(
                 modifier = Modifier
                     .weight(abstenciones.toFloat())
                     .fillMaxHeight()
-                    .background(VoteYellow)
+                    .background(VoteAbstention)
             )
         }
     }
