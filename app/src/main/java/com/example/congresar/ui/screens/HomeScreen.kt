@@ -21,6 +21,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -75,7 +76,7 @@ val voteRed = Color(0xFFE74C3C)
 val voteYellow = Color(0xFFF1C40F)
 
 private enum class CarouselTab(val label: String, val icon: ImageVector?) {
-    LEYES("Leyes", null),
+    LEYES("Leyes", Icons.Default.Gavel),
     NOTICIAS("Noticias", Icons.Outlined.Newspaper),
 }
 

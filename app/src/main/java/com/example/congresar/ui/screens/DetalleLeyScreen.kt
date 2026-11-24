@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Check
@@ -32,10 +33,12 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -52,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -59,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.congresar.R
 import com.example.congresar.domain.model.EstadoLey
 import com.example.congresar.domain.model.Ley
 import com.example.congresar.navigation.AppDestinations
@@ -99,6 +104,18 @@ fun DetalleLeyScreen(
     }
 
     Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(text = "Detalles de la Ley") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.diputados_back),
+                        )
+                    }
+                })
+        },
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
             if (ley?.votacion != null && selectedTab == LeyTab.DIPUTADOS) {
@@ -335,7 +352,10 @@ fun DetalleLeyScreen(
                                         modifier = Modifier.background(
                                             color = when (votoFilter) {
                                                 VotoFiltro.TODOS -> MaterialTheme.colorScheme.onBackground
-                                                VotoFiltro.AFIRMATIVO -> voteGreen.copy(alpha = 0.6f)
+                                                VotoFiltro.AFIRMATIVO -> voteGreen.copy(
+                                                    alpha = 0.6f
+                                                )
+
                                                 VotoFiltro.NEGATIVO -> voteRed.copy(alpha = 0.6f)
                                                 VotoFiltro.AUSENTE -> voteYellow.copy(alpha = 0.6f)
                                             }
