@@ -21,6 +21,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Cancel
 import androidx.compose.material.icons.rounded.CheckCircle
 import androidx.compose.material.icons.rounded.Check
@@ -28,10 +29,16 @@ import androidx.compose.material.icons.rounded.EditNote
 import androidx.compose.material.icons.rounded.FilterList
 import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -45,8 +52,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -54,6 +63,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.example.congresar.R
 import com.example.congresar.domain.model.EstadoLey
 import com.example.congresar.domain.model.Ley
 import com.example.congresar.navigation.AppDestinations
@@ -94,18 +104,101 @@ fun DetalleLeyScreen(
     }
 
     Scaffold(
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = { Text(text = "Detalles de la Ley") },
+                navigationIcon = {
+                    IconButton(onClick = { navController.popBackStack() }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                            contentDescription = stringResource(R.string.diputados_back),
+                        )
+                    }
+                })
+        },
         modifier = Modifier.fillMaxSize(),
         floatingActionButton = {
             if (ley?.votacion != null && selectedTab == LeyTab.DIPUTADOS) {
                 Box {
-                    FloatingActionButton(onClick = { filterMenuExpanded = true }) {
+                    FloatingActionButton(
+                        modifier = Modifier.border(
+                            shape = RoundedCornerShape(12.dp),
+                            border = BorderStroke(
+                                width = 2.dp,
+                                brush = Brush.linearGradient(
+                                    colors =
+                                        when (votoFilter) {
+                                            VotoFiltro.TODOS -> listOf(
+                                                MaterialTheme.colorScheme.outlineVariant,
+                                                MaterialTheme.colorScheme.outline
+                                            )
+
+                                            VotoFiltro.AFIRMATIVO -> listOf(
+                                                voteGreen,
+                                                MaterialTheme.colorScheme.background
+                                            )
+
+                                            VotoFiltro.NEGATIVO -> listOf(
+                                                voteRed,
+                                                MaterialTheme.colorScheme.background
+                                            )
+
+                                            VotoFiltro.AUSENTE -> listOf(
+                                                voteYellow,
+                                                MaterialTheme.colorScheme.background
+                                            )
+                                        }
+                                )
+                            )
+                        ),
+                        onClick = { filterMenuExpanded = true },
+                        containerColor = MaterialTheme.colorScheme.surface
+
+                    ) {
                         Icon(
-                            imageVector = Icons.Rounded.FilterList,
+                            imageVector = when (votoFilter) {
+                                VotoFiltro.TODOS -> Icons.Rounded.FilterList
+                                VotoFiltro.AFIRMATIVO -> Icons.Default.Check
+                                VotoFiltro.NEGATIVO -> Icons.Default.Close
+                                VotoFiltro.AUSENTE -> Icons.Default.Remove
+                            }, tint = when (votoFilter) {
+                                VotoFiltro.TODOS -> MaterialTheme.colorScheme.onSurface
+                                VotoFiltro.AFIRMATIVO -> voteGreen
+                                VotoFiltro.NEGATIVO -> voteRed
+                                VotoFiltro.AUSENTE -> voteYellow
+                            },
                             contentDescription = "Filtrar diputados por voto"
                         )
                     }
 
                     DropdownMenu(
+                        border = BorderStroke(
+                            width = 1.dp,
+                            brush = Brush.linearGradient(
+                                colors =
+                                    when (votoFilter) {
+                                        VotoFiltro.TODOS -> listOf(
+                                            MaterialTheme.colorScheme.outlineVariant,
+                                            MaterialTheme.colorScheme.outline
+                                        )
+
+                                        VotoFiltro.AFIRMATIVO -> listOf(
+                                            voteGreen,
+                                            MaterialTheme.colorScheme.background
+                                        )
+
+                                        VotoFiltro.NEGATIVO -> listOf(
+                                            voteRed,
+                                            MaterialTheme.colorScheme.background
+                                        )
+
+                                        VotoFiltro.AUSENTE -> listOf(
+                                            voteYellow,
+                                            MaterialTheme.colorScheme.background
+                                        )
+                                    }
+                            )
+                        ),
                         expanded = filterMenuExpanded,
                         onDismissRequest = { filterMenuExpanded = false },
                     ) {
@@ -259,7 +352,10 @@ fun DetalleLeyScreen(
                                         modifier = Modifier.background(
                                             color = when (votoFilter) {
                                                 VotoFiltro.TODOS -> MaterialTheme.colorScheme.onBackground
-                                                VotoFiltro.AFIRMATIVO -> voteGreen.copy(alpha = 0.6f)
+                                                VotoFiltro.AFIRMATIVO -> voteGreen.copy(
+                                                    alpha = 0.6f
+                                                )
+
                                                 VotoFiltro.NEGATIVO -> voteRed.copy(alpha = 0.6f)
                                                 VotoFiltro.AUSENTE -> voteYellow.copy(alpha = 0.6f)
                                             }

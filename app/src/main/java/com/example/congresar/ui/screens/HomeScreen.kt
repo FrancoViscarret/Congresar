@@ -21,6 +21,7 @@ import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Gavel
 import androidx.compose.material.icons.outlined.Newspaper
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -56,14 +57,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavHostController
 import com.example.congresar.R
 import com.example.congresar.domain.model.EstadoLey
-import com.example.congresar.domain.model.Noticia
 import com.example.congresar.domain.model.TipoLey
 import com.example.congresar.navigation.AppDestinations
 import com.example.congresar.ui.components.CongresarDatePicker
 import com.example.congresar.ui.components.EstadoLeyPill
 import com.example.congresar.ui.components.LawDetailsCard
 import com.example.congresar.ui.components.NewsDetailCard
-import com.example.congresar.ui.components.NewsDetailDialog
 import com.example.congresar.ui.components.PageIndicator
 import com.example.congresar.ui.components.RubroPill
 import com.example.congresar.ui.viewmodels.HomeViewModel
@@ -77,7 +76,7 @@ val voteRed = Color(0xFFE74C3C)
 val voteYellow = Color(0xFFF1C40F)
 
 private enum class CarouselTab(val label: String, val icon: ImageVector?) {
-    LEYES("Leyes", null),
+    LEYES("Leyes", Icons.Default.Gavel),
     NOTICIAS("Noticias", Icons.Outlined.Newspaper),
 }
 
@@ -94,7 +93,7 @@ fun HomeScreen(navController: NavHostController) {
     val vm: HomeViewModel = hiltViewModel()
     val uiState by vm.uiState.collectAsStateWithLifecycle()
     var showDatePicker by remember { mutableStateOf(false) }
-    var expandedNoticia by remember { mutableStateOf<Noticia?>(null) }
+    var expandedNoticiaId by remember { mutableStateOf<Int?>(null) }
     val scope = rememberCoroutineScope()
 
     var selectedTab by remember { mutableStateOf(CarouselTab.LEYES) }
@@ -178,18 +177,6 @@ fun HomeScreen(navController: NavHostController) {
         )
     }
 
-    expandedNoticia?.let { noticia ->
-        val leyesRelacionadasDialogo = uiState.leyes
-            .filter { ley -> ley.id in noticia.relatedTo }
-            .map { ley -> ley.titulo }
-
-        NewsDetailDialog(
-            noticia = noticia,
-            relatedLaws = leyesRelacionadasDialogo,
-            onDismiss = { expandedNoticia = null }
-        )
-    }
-
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
@@ -215,7 +202,11 @@ fun HomeScreen(navController: NavHostController) {
                     modifier = Modifier
                         .fillMaxWidth()
 
-                        .fillMaxHeight(0.50f),
+                        .fillMaxHeight(when(selectedTab) {
+                            CarouselTab.LEYES -> 0.5f
+                            CarouselTab.NOTICIAS -> 0.3f
+                        }
+                        ),
                     contentAlignment = Alignment.BottomCenter
                 ) {
 
@@ -254,8 +245,13 @@ fun HomeScreen(navController: NavHostController) {
                                             }
 
                                             CarouselTab.NOTICIAS -> {
-                                                noticias.getOrNull(page)?.let {
-                                                    expandedNoticia = it
+                                                noticias.getOrNull(page)?.let { noticia ->
+                                                    expandedNoticiaId =
+                                                        if (expandedNoticiaId == noticia.id) {
+                                                            null
+                                                        } else {
+                                                            noticia.id
+                                                        }
                                                 }
                                             }
                                         }
@@ -330,15 +326,15 @@ fun HomeScreen(navController: NavHostController) {
                                             )
 
                                         }
-                                        Text(
-                                            text = items[page].titulo,
-                                            style = MaterialTheme.typography.titleLarge,
-                                            fontWeight = FontWeight.Bold,
-                                            color = Color.White,
-                                            maxLines = 2,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
                                     }
+                                    Text(
+                                        text = items[page].titulo,
+                                        style = MaterialTheme.typography.titleLarge,
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.White,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis
+                                    )
                                 }
 
                             }
@@ -457,7 +453,15 @@ fun HomeScreen(navController: NavHostController) {
                                 NewsDetailCard(
                                     noticia = noticia,
                                     relatedLaws = leyesRelacionadas,
-                                    onClick = { expandedNoticia = noticia }
+                                    expanded = expandedNoticiaId == noticia.id,
+                                    onClick = {
+                                        expandedNoticiaId =
+                                            if (expandedNoticiaId == noticia.id) {
+                                                null
+                                            } else {
+                                                noticia.id
+                                            }
+                                    }
                                 )
                                 Spacer(modifier = Modifier.height(8.dp))
 
