@@ -1,9 +1,12 @@
 package com.example.congresar.ui.screens
 
 import android.content.res.Configuration
+import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.minus
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -13,7 +16,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -60,36 +62,40 @@ fun DiputadosTVScreen(
             }
         }
     }
-    Scaffold(topBar = {
-        CenterAlignedTopAppBar(title = {
-            Row(
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    modifier = Modifier,
-                    painter = painterResource(R.drawable.diputados_tv_directo),
-                    contentDescription = ""
-                )
-                Text(
-                    text = "Diputados TV",
-                    modifier = Modifier.padding(horizontal = 12.dp)
-                )
-            }
-        }, navigationIcon = {
-            IconButton(onClick = { navController.popBackStack() }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
-                    contentDescription = stringResource(R.string.diputados_back),
-                )
-            }
-        })
-    }) { paddingValues ->
+    Scaffold(
+        topBar =
+            {
+                if (!isLandscape)
+                    CenterAlignedTopAppBar(title = {
+                        Row(
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                modifier = Modifier,
+                                painter = painterResource(R.drawable.diputados_tv_directo),
+                                contentDescription = ""
+                            )
+                            Text(
+                                text = "Diputados TV",
+                                modifier = Modifier.padding(horizontal = 12.dp)
+                            )
+                        }
+                    }, navigationIcon = {
+                        IconButton(onClick = { navController.popBackStack() }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Rounded.ArrowBack,
+                                contentDescription = stringResource(R.string.diputados_back),
+                            )
+                        }
+                    })
+
+            }) { paddingValues ->
         AndroidView(
             modifier = Modifier
-                .fillMaxWidth()
+                .fillMaxSize()
+                .padding(paddingValues.minus(PaddingValues(12.dp)))
                 .padding(8.dp)
-                .padding(paddingValues = paddingValues)
                 .clip(RoundedCornerShape(5.dp)),
             factory = { context ->
                 YouTubePlayerView(context).apply {
