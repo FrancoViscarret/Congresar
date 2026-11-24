@@ -64,16 +64,20 @@ import com.example.congresar.ui.components.EstadoLeyPill
 import com.example.congresar.ui.components.LawDetailsCard
 import com.example.congresar.ui.components.NewsDetailCard
 import com.example.congresar.ui.components.PageIndicator
-import com.example.congresar.ui.components.RubroPill
+import com.example.congresar.ui.theme.BrandBorder
+import com.example.congresar.ui.theme.BrandTint
+import com.example.congresar.ui.theme.LogoPrimary
+import com.example.congresar.ui.theme.VoteAbstention
+import com.example.congresar.ui.theme.VoteAbstentionContainer
+import com.example.congresar.ui.theme.VoteAffirmative
+import com.example.congresar.ui.theme.VoteAffirmativeContainer
+import com.example.congresar.ui.theme.VoteNegative
+import com.example.congresar.ui.theme.VoteNegativeContainer
 import com.example.congresar.ui.viewmodels.HomeViewModel
 import java.time.Instant
 import java.time.ZoneOffset
 import kotlin.math.absoluteValue
 import kotlinx.coroutines.launch
-
-val voteGreen = Color(0xFF2ECC71)
-val voteRed = Color(0xFFE74C3C)
-val voteYellow = Color(0xFFF1C40F)
 
 private enum class CarouselTab(val label: String, val icon: ImageVector?) {
     LEYES("Leyes", Icons.Default.Gavel),
@@ -308,11 +312,15 @@ fun HomeScreen(navController: NavHostController) {
                                                     EstadoLey.EN_TRATAMIENTO -> "En comisión"
                                                 },
                                                 backgroundColor = when (estadoLey) {
-                                                    EstadoLey.APROBADA -> voteGreen
-                                                    EstadoLey.RECHAZADA -> voteRed
-                                                    EstadoLey.EN_TRATAMIENTO -> voteYellow
+                                                    EstadoLey.APROBADA -> VoteAffirmativeContainer
+                                                    EstadoLey.RECHAZADA -> VoteNegativeContainer
+                                                    EstadoLey.EN_TRATAMIENTO -> VoteAbstentionContainer
                                                 },
-                                                accentColor = MaterialTheme.colorScheme.background
+                                                accentColor = when (estadoLey) {
+                                                    EstadoLey.APROBADA -> VoteAffirmative
+                                                    EstadoLey.RECHAZADA -> VoteNegative
+                                                    EstadoLey.EN_TRATAMIENTO -> VoteAbstention
+                                                },
                                             )
                                             EstadoLeyPill(
                                                 text = when (items[page].tipoLey) {
@@ -320,9 +328,8 @@ fun HomeScreen(navController: NavHostController) {
                                                     TipoLey.ACTUALIZACION_DE_LEY -> "Actualización ley vigente"
                                                     null -> ""
                                                 },
-
-                                                accentColor = MaterialTheme.colorScheme.background,
-                                                backgroundColor = Color.Blue
+                                                accentColor = LogoPrimary,
+                                                backgroundColor = BrandTint,
                                             )
 
                                         }
@@ -346,11 +353,11 @@ fun HomeScreen(navController: NavHostController) {
                             .align(Alignment.TopCenter)
                             .padding(top = 16.dp)
                             .clip(RoundedCornerShape(percent = 50))
-                            .background(Color(0xFF0D0D0D))
+                            .background(MaterialTheme.colorScheme.background)
                             .border(
                                 width = 1.dp,
-                                color = Color.White.copy(alpha = 0.10f),
-                                shape = RoundedCornerShape(percent = 50)
+                                color = BrandBorder,
+                                shape = RoundedCornerShape(percent = 50),
                             )
                             .padding(4.dp),
                         horizontalArrangement = Arrangement.spacedBy(4.dp),
@@ -359,12 +366,20 @@ fun HomeScreen(navController: NavHostController) {
                         CarouselTab.entries.forEach { tab ->
                             val selected = tab == selectedTab
                             val segmentColor by animateColorAsState(
-                                targetValue = if (selected) Color.White else Color.Transparent,
-                                label = "tabBackground"
+                                targetValue = if (selected) {
+                                    MaterialTheme.colorScheme.primary
+                                } else {
+                                    Color.Transparent
+                                },
+                                label = "tabBackground",
                             )
                             val contentColor by animateColorAsState(
-                                targetValue = if (selected) Color(0xFF0D0D0D) else Color.White,
-                                label = "tabContent"
+                                targetValue = if (selected) {
+                                    MaterialTheme.colorScheme.onPrimary
+                                } else {
+                                    MaterialTheme.colorScheme.onSurfaceVariant
+                                },
+                                label = "tabContent",
                             )
 
                             Row(

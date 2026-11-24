@@ -18,13 +18,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.example.congresar.ui.theme.BrandTint
+import com.example.congresar.ui.theme.LogoPrimary
 
 @Composable
 fun RubroPill(
     text: String,
     modifier: Modifier = Modifier,
-    accentColor: Color = Color(0xFF00A2FF),
-    backgroundColor: Color = Color(0xFF0A1828)
+    accentColor: Color = LogoPrimary,
+    backgroundColor: Color = BrandTint,
 ) {
     Surface(
         modifier = modifier,
