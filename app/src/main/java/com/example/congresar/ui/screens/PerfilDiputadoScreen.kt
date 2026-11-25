@@ -20,13 +20,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
+import androidx.compose.material.icons.rounded.ChatBubbleOutline
 import androidx.compose.material.icons.rounded.Person
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilledTonalIconButton
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
@@ -50,6 +53,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -58,7 +62,9 @@ import com.example.congresar.R
 import com.example.congresar.domain.model.DiputadoPerfil
 import com.example.congresar.domain.model.SentidoVoto
 import com.example.congresar.domain.model.VotacionDiputado
+import com.example.congresar.navigation.AppDestinations
 import com.example.congresar.presentation.perfil.PerfilDiputadoViewModel
+import com.example.congresar.ui.theme.BrandTint
 import com.example.congresar.ui.theme.VoteAbsent
 import com.example.congresar.ui.theme.VoteAbsentContainer
 import com.example.congresar.ui.theme.VoteAbstention
@@ -141,6 +147,9 @@ fun PerfilDiputadoScreen(
             else -> {
                 PerfilContent(
                     perfil = perfil,
+                    onChatClick = {
+                        navController.navigate(AppDestinations.chat(perfil.diputado.id))
+                    },
                     modifier = Modifier.padding(paddingValues),
                 )
             }
@@ -152,6 +161,7 @@ fun PerfilDiputadoScreen(
 @Composable
 private fun PerfilContent(
     perfil: DiputadoPerfil,
+    onChatClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val diputado = perfil.diputado
@@ -192,14 +202,37 @@ private fun PerfilContent(
                 )
             }
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = stringResource(R.string.perfil_identity, nombreVisible, perfil.edad),
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.onBackground,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(horizontal = 24.dp),
-            )
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    text = stringResource(R.string.perfil_identity, nombreVisible, perfil.edad),
+                    modifier = Modifier.weight(1f, fill = false),
+                    style = MaterialTheme.typography.titleLarge,
+                    fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onBackground,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                FilledTonalIconButton(
+                    onClick = onChatClick,
+                    modifier = Modifier.size(40.dp),
+                    colors = IconButtonDefaults.filledTonalIconButtonColors(
+                        containerColor = BrandTint,
+                        contentColor = MaterialTheme.colorScheme.primary,
+                    ),
+                ) {
+                    Icon(
+                        imageVector = Icons.Rounded.ChatBubbleOutline,
+                        contentDescription = stringResource(R.string.perfil_chat),
+                    )
+                }
+            }
             Spacer(modifier = Modifier.height(12.dp))
             FlowRow(
                 modifier = Modifier

@@ -40,4 +40,14 @@
     <string name="perfil_vote_negativo">NEGATIVO</string>
     <string name="perfil_vote_abstencion">ABSTENCIÓN</string>
     <string name="perfil_vote_ausente">AUSENTE</string>
+    <string name="perfil_chat">Abrir chat con el diputado</string>
+
+    <string name="chat_back">Volver</string>
+    <string name="chat_welcome">Este es un canal directo de consulta ciudadana. Escribí tu consulta y el diputado te responde por acá.</string>
+    <string name="chat_reply">Recibí tu consulta. La reviso y te respondo a la brevedad por este canal.</string>
+    <string name="chat_input_placeholder">Escribí tu consulta</string>
+    <string name="chat_send">Enviar mensaje</string>
+    <string name="chat_loading">Cargando conversación</string>
+    <string name="chat_not_found">No se encontró el diputado</string>
+    <string name="chat_photo">Foto de %1$s</string>
 </resources>

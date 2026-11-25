@@ -34,6 +34,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.congresar.R
+import com.example.congresar.ui.screens.ChatDiputadoScreen
 import com.example.congresar.ui.screens.DetalleLeyScreen
 import com.example.congresar.ui.theme.NavIndicator
 import com.example.congresar.ui.screens.DiputadosScreen
@@ -70,6 +71,7 @@ fun AppNavigation() {
     val navController: NavHostController = rememberNavController()
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    val enChat = currentRoute?.startsWith(AppDestinations.CHAT_BASE) == true
 
     var isBottomBarVisible by remember { mutableStateOf(true) }
 
@@ -77,7 +79,7 @@ fun AppNavigation() {
         modifier = Modifier.fillMaxSize(),
         containerColor = MaterialTheme.colorScheme.background,
         bottomBar = {
-            if (isBottomBarVisible) {
+            if (isBottomBarVisible && !enChat) {
                 AppBottomBar(
                     currentRoute = currentRoute,
                     onNavigate = { route -> navController.navigateToBottomDestination(route) },
@@ -90,7 +92,9 @@ fun AppNavigation() {
             startDestination = AppDestinations.HOME,
             modifier = Modifier
                 .fillMaxSize()
-                .padding(bottom = paddingValues.calculateBottomPadding()),
+                .padding(
+                    bottom = if (enChat) 0.dp else paddingValues.calculateBottomPadding(),
+                ),
         ) {
             composable(route = AppDestinations.HOME) {
                 HomeScreen(navController = navController)
@@ -111,6 +115,14 @@ fun AppNavigation() {
                 ),
             ) {
                 PerfilDiputadoScreen(navController = navController)
+            }
+            composable(
+                route = AppDestinations.CHAT,
+                arguments = listOf(
+                    navArgument(AppDestinations.PERFIL_ARG) { type = NavType.IntType },
+                ),
+            ) {
+                ChatDiputadoScreen(navController = navController)
             }
             composable(
                 route = AppDestinations.DETALLE_LEY,
