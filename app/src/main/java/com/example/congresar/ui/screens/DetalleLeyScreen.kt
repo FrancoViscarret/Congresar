@@ -422,14 +422,31 @@ fun DetalleLeyScreen(
                                                                     AppDestinations.perfil(diputado.id)
                                                                 )
                                                             }),
-                                                        horizontalArrangement = Arrangement.Center,
+                                                        horizontalArrangement = Arrangement.spacedBy(
+                                                            8.dp,
+                                                            Alignment.CenterHorizontally
+                                                        ),
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
                                                         Icon(
                                                             painter = painterResource(R.drawable.profile_icon),
-                                                            contentDescription = ""
+                                                            contentDescription = "",
+                                                            tint = when (votoFilter) {
+                                                                VotoFiltro.TODOS -> MaterialTheme.colorScheme.background
+                                                                VotoFiltro.AFIRMATIVO -> VoteAffirmative
+                                                                VotoFiltro.NEGATIVO -> VoteNegative
+                                                                VotoFiltro.AUSENTE -> VoteAbsent
+                                                            }
                                                         )
-                                                        Text(text = "Perfil")
+                                                        Text(
+                                                            text = "Perfil",
+                                                            color = when (votoFilter) {
+                                                                VotoFiltro.TODOS -> MaterialTheme.colorScheme.background
+                                                                VotoFiltro.AFIRMATIVO -> VoteAffirmative
+                                                                VotoFiltro.NEGATIVO -> VoteNegative
+                                                                VotoFiltro.AUSENTE -> VoteAbsent
+                                                            }
+                                                        )
                                                     }
                                                 }
                                                 Surface(
@@ -446,13 +463,17 @@ fun DetalleLeyScreen(
                                                                     AppDestinations.chat(diputado.id)
                                                                 )
                                                             }),
-                                                        horizontalArrangement = Arrangement.Center,
+                                                        horizontalArrangement = Arrangement.spacedBy(
+                                                            8.dp,
+                                                            Alignment.CenterHorizontally
+                                                        ),
                                                         verticalAlignment = Alignment.CenterVertically
                                                     ) {
                                                         Icon(
                                                             painter = painterResource(R.drawable.chat_icon),
-                                                            contentDescription = ""
-                                                        )
+                                                            contentDescription = "",
+
+                                                            )
                                                         Text(text = "Chat")
                                                     }
                                                 }
