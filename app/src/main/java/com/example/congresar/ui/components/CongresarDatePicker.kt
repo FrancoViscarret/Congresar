@@ -32,7 +32,7 @@ fun CongresarDatePicker(
     DatePickerDialog(
         modifier = Modifier.border(
             border = BorderStroke(width = 1.dp, color = MaterialTheme.colorScheme.outline),
-            shape = RoundedCornerShape(16.dp)
+            shape = RoundedCornerShape(20.dp)
         ),
         onDismissRequest = onDismiss,
         confirmButton = {
@@ -42,18 +42,23 @@ fun CongresarDatePicker(
                     Text(
                         text = "Ver evento",
                         style = MaterialTheme.typography.titleMediumEmphasized,
-                        color = MaterialTheme.colorScheme.background
+                        color = MaterialTheme.colorScheme.onPrimary
                     )
                 }
             )
         },
-        colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.onBackground)
+        colors = DatePickerDefaults.colors(containerColor = MaterialTheme.colorScheme.primary)
     ) {
         DatePicker(
             colors = DatePickerDefaults.colors(
                 disabledDayContentColor = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.2f),
-                selectedDayContainerColor = MaterialTheme.colorScheme.onBackground,
-                todayDateBorderColor = MaterialTheme.colorScheme.onBackground
+                selectedDayContainerColor = MaterialTheme.colorScheme.primary,
+                todayDateBorderColor = MaterialTheme.colorScheme.primary,
+                dividerColor = MaterialTheme.colorScheme.primary,
+                dayContentColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.5f),
+                navigationContentColor = MaterialTheme.colorScheme.primary,
+                weekdayContentColor = MaterialTheme.colorScheme.primary,
+
             ),
             state = datePickerState,
             title = {
@@ -61,13 +66,13 @@ fun CongresarDatePicker(
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(60.dp)
-                        .background(color = MaterialTheme.colorScheme.onBackground),
+                        .background(color = MaterialTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center,
 
                     ) {
                     Text(
                         text = "Ubicar evento por fecha",
-                        color = MaterialTheme.colorScheme.background,
+                        color = MaterialTheme.colorScheme.onPrimary,
                         style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold,
                         textAlign = TextAlign.Center

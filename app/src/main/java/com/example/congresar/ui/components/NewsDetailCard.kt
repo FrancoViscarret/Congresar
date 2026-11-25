@@ -15,13 +15,16 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -39,13 +42,14 @@ import com.example.congresar.ui.theme.BrandTint
 import java.time.format.DateTimeFormatter
 
 private val VoteDateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
 @Composable
 fun NewsDetailCard(
+    modifier: Modifier = Modifier,
     noticia: Noticia,
     relatedLaws: List<String>,
     expanded: Boolean = false,
     onClick: (() -> Unit)? = null,
-    modifier: Modifier = Modifier,
 ) {
     val animatedMaxLines by animateIntAsState(
         targetValue = if (expanded) 30 else 5,
@@ -125,8 +129,23 @@ fun NewsDetailCard(
                     )
                     CongresarAnnotatedString(
                         titulo = "Leé la nota completa en: ",
-                        contenido = noticia.urlFuente
+                        contenido = ""
                     )
+                    TextButton(
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        onClick = {},
+                        shape = RoundedCornerShape(21.dp),
+                        colors = ButtonDefaults.textButtonColors(
+                            containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)
+                        )
+                    ) {
+                        Text(
+                            text = noticia.urlFuente,
+                            color = MaterialTheme.colorScheme.primary,
+                            fontStyle = FontStyle.Italic,
+                            style = MaterialTheme.typography.labelMedium
+                        )
+                    }
                     HorizontalDivider(
                         modifier = Modifier
                             .height(24.dp)

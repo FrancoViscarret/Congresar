@@ -1,5 +1,6 @@
 package com.example.congresar.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -22,17 +23,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Cancel
-import androidx.compose.material.icons.rounded.CheckCircle
-import androidx.compose.material.icons.rounded.Check
-import androidx.compose.material.icons.rounded.EditNote
-import androidx.compose.material.icons.rounded.FilterList
-import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material.icons.automirrored.rounded.MenuBook
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.rounded.Cancel
+import androidx.compose.material.icons.rounded.Check
+import androidx.compose.material.icons.rounded.CheckCircle
+import androidx.compose.material.icons.rounded.EditNote
+import androidx.compose.material.icons.rounded.FilterList
+import androidx.compose.material.icons.rounded.Groups
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -55,6 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -98,6 +99,7 @@ fun DetalleLeyScreen(
     var selectedTab by remember { mutableStateOf(LeyTab.DESCRIPCION) }
     var votoFilter by remember { mutableStateOf(VotoFiltro.TODOS) }
     var filterMenuExpanded by remember { mutableStateOf(false) }
+    var selectedItemId: Int? by remember { mutableStateOf(null) }
 
     val diputados = if (ley?.votacion == null) {
         uiState.diputados
@@ -370,6 +372,11 @@ fun DetalleLeyScreen(
                                                     VotoFiltro.AFIRMATIVO -> "Voto afirmativo"
                                                     VotoFiltro.NEGATIVO -> "Voto negativo"
                                                     VotoFiltro.AUSENTE -> "Se ausentó"
+                                                }, color = when (votoFilter) {
+                                                    VotoFiltro.TODOS -> MaterialTheme.colorScheme.primary
+                                                    VotoFiltro.AFIRMATIVO -> VoteAffirmative
+                                                    VotoFiltro.NEGATIVO -> VoteNegative
+                                                    VotoFiltro.AUSENTE -> MaterialTheme.colorScheme.primary
                                                 },
                                                 style = MaterialTheme.typography.labelLarge,
                                                 modifier = Modifier.padding(
@@ -382,11 +389,76 @@ fun DetalleLeyScreen(
                                             diputado = diputado,
                                             roundedSize = 10,
                                             onClick = {
-                                                navController.navigate(
-                                                    AppDestinations.perfil(diputado.id)
-                                                )
+                                                if (selectedItemId == null) {
+                                                    selectedItemId = diputado.id
+                                                } else {
+                                                    selectedItemId = null
+                                                }
                                             }
                                         )
+
+
+                                        AnimatedVisibility(
+                                            visible = selectedItemId == diputado.id
+                                        ) {
+                                            Row(modifier = Modifier.fillMaxWidth()) {
+                                                Surface(
+                                                    modifier = Modifier
+                                                        .weight(1f),
+                                                    color = when (votoFilter) {
+                                                        VotoFiltro.TODOS -> MaterialTheme.colorScheme.onBackground
+                                                        VotoFiltro.AFIRMATIVO -> VoteAffirmativeContainer
+                                                        VotoFiltro.NEGATIVO -> VoteNegativeContainer
+                                                        VotoFiltro.AUSENTE -> VoteAbsentContainer
+                                                    }
+
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .height(40.dp)
+                                                            .clickable(onClick = {
+                                                                navController.navigate(
+                                                                    AppDestinations.perfil(diputado.id)
+                                                                )
+                                                            }),
+                                                        horizontalArrangement = Arrangement.Center,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Icon(
+                                                            painter = painterResource(R.drawable.profile_icon),
+                                                            contentDescription = ""
+                                                        )
+                                                        Text(text = "Perfil")
+                                                    }
+                                                }
+                                                Surface(
+                                                    modifier = Modifier
+                                                        .weight(1f),
+                                                    color = MaterialTheme.colorScheme.primary
+                                                ) {
+                                                    Row(
+                                                        modifier = Modifier
+                                                            .fillMaxWidth()
+                                                            .height(39.dp)
+                                                            .clickable(onClick = {
+                                                                navController.navigate(
+                                                                    AppDestinations.chat(diputado.id)
+                                                                )
+                                                            }),
+                                                        horizontalArrangement = Arrangement.Center,
+                                                        verticalAlignment = Alignment.CenterVertically
+                                                    ) {
+                                                        Icon(
+                                                            painter = painterResource(R.drawable.chat_icon),
+                                                            contentDescription = ""
+                                                        )
+                                                        Text(text = "Chat")
+                                                    }
+                                                }
+                                            }
+                                        }
+
                                     }
                                 }
 

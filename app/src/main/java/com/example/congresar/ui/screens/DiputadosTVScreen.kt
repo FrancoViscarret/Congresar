@@ -1,7 +1,6 @@
 package com.example.congresar.ui.screens
 
 import android.content.res.Configuration
-import android.view.ViewGroup
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
